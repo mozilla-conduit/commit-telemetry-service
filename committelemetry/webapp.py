@@ -5,7 +5,7 @@
 from flask import Flask, render_template, request
 from flask.json import dumps
 
-import telemetry
+from committelemetry import telemetry
 
 # FIXME turn this into an environment variable
 TARGET_REPO = 'https://hg.mozilla.org/mozilla-central/'
