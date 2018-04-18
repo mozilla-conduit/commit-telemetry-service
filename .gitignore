@@ -3,3 +3,4 @@
 /.env
 __pycache__/
 *.swp
+/.pytest_cache/
