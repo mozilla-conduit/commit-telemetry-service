@@ -1,1 +1,1 @@
-A Flask webservice that produces Mozilla code repository telemetry.
+A simple queue worker that produces Mozilla code repository telemetry.

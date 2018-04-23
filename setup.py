@@ -8,7 +8,5 @@ setup(
     name='committelemetry',
     packages=['committelemetry'],
     include_package_data=True,
-    install_requires=[
-        'flask',
-    ],
+    install_requires=[],
 )
