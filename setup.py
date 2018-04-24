@@ -11,7 +11,8 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'dump-telemetry=committelemetry.tool:dump_telemetry'
+            'dump-telemetry=committelemetry.tool:dump_telemetry',
+            'process-queue-messages=committelemetry.tool:process_queue_messages',
         ]
     }
 )

@@ -1,11 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import logging
 import pprint
 import sys
 
 import click
 
+from committelemetry.pulse import run_pulse_listener
 from .telemetry import NoSuchChangeset, payload_for_changeset
 
 
@@ -38,3 +40,39 @@ def dump_telemetry(debug, target_repo, node_id):
         sys.exit(1)
 
     pprint.pprint(ping)
+
+
+@click.command()
+@click.option(
+    '--debug',
+    envvar='DEBUG',
+    is_flag=True,
+    help='Print debugging messages about the script\'s progress.'
+)
+@click.option(
+    '--user',
+    envvar='PULSE_USERNAME',
+    help='The Pulse queue username to connect with.'
+)
+@click.option(
+    '--password',
+    prompt=True,
+    hide_input=True,
+    envvar='PULSE_PASSWORD',
+    help='The Pulse queue user\'s password.'
+)
+@click.option(
+    '--timeout',
+    default=1.0,
+    help='Timeout, in seconds, to wait for additional queue messages.'
+)
+def process_queue_messages(debug, user, password, timeout):
+    """Process all queued mercurial repo change messages."""
+    if debug:
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+
+    logging.basicConfig(stream=sys.stdout, level=log_level)
+
+    run_pulse_listener(user, password, timeout)

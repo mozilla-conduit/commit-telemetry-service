@@ -127,7 +127,7 @@ def payload_for_changeset(changesetid, repo_url):
         telemetry.mozilla.org service.
     """
     # Example URL: https://hg.mozilla.org/mozilla-central/json-rev/deafa2891c61
-    response = requests.get(f'{repo_url}json-rev/{changesetid}')
+    response = requests.get(f'{repo_url}/json-rev/{changesetid}')
 
     if response.status_code == 404:
         raise NoSuchChangeset(
