@@ -6,7 +6,12 @@ from setuptools import setup
 
 setup(
     name='committelemetry',
+    version='0.1',
     packages=['committelemetry'],
     include_package_data=True,
-    install_requires=[],
+    entry_points={
+        'console_scripts': [
+            'dump-telemetry=committelemetry.tool:dump_telemetry'
+        ]
+    }
 )

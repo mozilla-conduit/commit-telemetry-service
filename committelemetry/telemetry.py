@@ -15,10 +15,8 @@ ATTACHMENT_TYPE_MOZREVIEW = 'text/x-review-board-request'
 ATTACHMENT_TYPE_GITHUB = 'text/x-github-request'
 ATTACHMENT_TYPE_PHABRICATOR = 'text/x-phabricator-request'
 
-
 # FIXME turn this into an environment variable
 BMO_API_URL = 'https://bugzilla.mozilla.org/rest'
-
 
 # Match "Differential Revision: https://phabricator.services.mozilla.com/D861"
 PHABRICATOR_COMMIT_RE = re.compile(
@@ -45,8 +43,7 @@ def is_patch(attachment):
     """Is the given BMO attachment JSON for a patch attachment?"""
     # Example: https://bugzilla.mozilla.org/rest/bug/1447193/attachment?exclude_fields=data
     return (
-        attachment['is_patch'] == 1 or
-        attachment['content_type'] in (
+        attachment['is_patch'] == 1 or attachment['content_type'] in (
             ATTACHMENT_TYPE_MOZREVIEW,
             ATTACHMENT_TYPE_GITHUB,
             ATTACHMENT_TYPE_PHABRICATOR,
@@ -131,6 +128,12 @@ def payload_for_changeset(changesetid, repo_url):
     """
     # Example URL: https://hg.mozilla.org/mozilla-central/json-rev/deafa2891c61
     response = requests.get(f'{repo_url}json-rev/{changesetid}')
+
+    if response.status_code == 404:
+        raise NoSuchChangeset(
+            f'The changeset {changesetid} does not exist in repository {repo_url}'
+        )
+
     response.raise_for_status()
 
     system = determine_review_system(response.json())
@@ -170,6 +173,14 @@ def determine_review_system(revision_json):
         return ReviewSystem.bmo
 
     return ReviewSystem.unknown
+
+
+class Error(Exception):
+    """Generic error class for this module."""
+
+
+class NoSuchChangeset(Error):
+    """Raised if the given changeset ID does not exist in the target system."""
 
 
 # Test revs:

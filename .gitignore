@@ -4,3 +4,4 @@
 __pycache__/
 *.swp
 /.pytest_cache/
+*.egg-info/
