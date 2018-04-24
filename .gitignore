@@ -1,5 +1,6 @@
 # Created by .ignore support plugin (hsz.mobi)
 *~
+*.log
 /.env
 __pycache__/
 *.swp
