@@ -27,7 +27,7 @@ PHABRICATOR_COMMIT_RE = re.compile(
 )
 
 # Match "Backed out 4 changesets (bug 1448077) for xpcshell failures at..."
-BACKOUT_RE = re.compile('^backed out ', re.IGNORECASE)
+BACKOUT_RE = re.compile('^back(ed|ing|) out ', re.IGNORECASE)
 
 
 class ReviewSystem(Enum):
