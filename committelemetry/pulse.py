@@ -23,8 +23,8 @@ def process_push_message(body, message):
     Messages can be inspected by visiting https://tools.taskcluster.net/pulse-inspector?bindings[0][exchange]=exchange%2Fhgpushes%2Fv2&bindings[0][routingKeyPattern]=%23
 
     Args:
-        body: The decoded message body as a Python dict.
-        message: The AMQP message from Pulse.
+        body: The decoded JSON message body as a Python dict.
+        message: A AMQP Message object.
     """
     log.debug(f'received message: {message}')
 
@@ -38,7 +38,9 @@ def process_push_message(body, message):
     heads = payload['data']['heads']
     hcount = len(heads)
     if hcount != 1:
-        log.info(f'skipped message with multiple heads (expected 1, got {hcount})')
+        log.info(
+            f'skipped message with multiple heads (expected 1, got {hcount})'
+        )
         message.ack()
 
     changeset = heads.pop()
@@ -51,7 +53,9 @@ def process_push_message(body, message):
     # Pings need a unique ID so they can be de-duplicated by the ingestion
     # service.  We can use the changeset ID for the unique key.
     #send_ping(changeset, ping)
-    print(f'sending ping: {ping}')  # TODO shim until the real telemetry service endpoint is ready
+    print(
+        f'sending ping: {ping}'
+    )  # TODO shim until the real telemetry service endpoint is ready
 
     message.ack()
 
@@ -69,38 +73,45 @@ def run_pulse_listener(username, password, timeout):
         password=password,
     )
 
-    # Connect and pass in our own low value for retries so the connection fails fast if there
-    # is a problem.
-    connection.ensure_connection(max_retries=1)  # Retries must be >=1 or it will retry forever.
+    # Connect and pass in our own low value for retries so the connection
+    # fails fast if there is a problem.
+    connection.ensure_connection(
+        max_retries=1
+    )  # Retries must be >=1 or it will retry forever.
 
     try:
-        hgpush_exchange = Exchange('exchange/hgpushes/v2', 'topic', channel=connection) # TODO make exchange name configurable
+        hgpush_exchange = Exchange(
+            'exchange/hgpushes/v2', 'topic', channel=connection
+        )  # TODO make exchange name configurable
 
         # Pulse queue names need to be prefixed with the username
         queue_name = f'queue/{username}/hgpush_commit_telemetry'  # TODO make queue name configurable
         queue = Queue(
             queue_name,
             exchange=hgpush_exchange,
-            routing_key='integration/mozilla-inbound',  # TODO make routing key configurable
+            routing_key=
+            'integration/mozilla-inbound',  # TODO make routing key configurable
             durable=True,
             exclusive=False,
             auto_delete=False,
             channel=connection,
         )
 
-        # Passing passive=True will assert that the exchange exists but won't try
-        # to declare it.  The Pulse server forbids declaring exchanges.
+        # Passing passive=True will assert that the exchange exists but won't
+        #  try to declare it.  The Pulse server forbids declaring exchanges.
         hgpush_exchange.declare(passive=True)
 
-        # Queue.declare() also declares the exchange, which isn't allowed by the Pulse server.
-        # Use the low-level Queue API to only declare the queue itself.
+        # Queue.declare() also declares the exchange, which isn't allowed by
+        # the Pulse server. Use the low-level Queue API to only declare the
+        # queue itself.
         queue.queue_declare()
         queue.queue_bind()
 
         # Pass auto_declare=False so that Consumer does not try to declare the
         # exchange.  Declaring exchanges is not allowed by the Pulse server.
-        with connection.Consumer(queue, callbacks=[process_push_message], auto_declare=False) as consumer:
-
+        with connection.Consumer(
+            queue, callbacks=[process_push_message], auto_declare=False
+        ) as consumer:
             log.info('reading messages')
             connection.drain_events(timeout=timeout)
     finally:
