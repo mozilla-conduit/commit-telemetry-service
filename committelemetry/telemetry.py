@@ -55,6 +55,7 @@ def is_patch(attachment):
 
 
 def fetch_attachments(bug_id):
+    """Fetch the given bug's attachment list from Bugzilla."""
     # Example: https://bugzilla.mozilla.org/rest/bug/1447193/attachment?exclude_fields=data
     url = f'{BMO_API_URL}/bug/{bug_id}/attachment?exclude_fields=data'
     response = requests.get(url)
@@ -64,6 +65,7 @@ def fetch_attachments(bug_id):
 
 
 def fetch_bug_history(bug_id):
+    """Fetch the given bug's history from Bugzilla."""
     # Example: https://bugzilla.mozilla.org/rest/bug/1447193/history
     url = f'{BMO_API_URL}/bug/{bug_id}/history'
     response = requests.get(url)
@@ -73,19 +75,23 @@ def fetch_bug_history(bug_id):
 
 
 def has_phab_markers(revision_description):
+    """Does the given review description point to a Phabricator Revision?"""
     return bool(re.search(PHABRICATOR_COMMIT_RE, revision_description))
 
 
 def has_backout_markers(revision_description):
+    """Is the given revision description for a back-out request?"""
     return bool(re.search(BACKOUT_RE, revision_description))
 
 
 def has_merge_markers(revision_json):
+    """Is the given revision a merge?"""
     # If the node has more than one parent then it's a merge.
     return len(revision_json['parents']) > 1
 
 
 def has_mozreview_markers(attachments):
+    """Is there an attachment pointing to a MozReview review request?"""
     patches = [a for a in attachments if is_patch(a)]
     for patch_attachment in patches:
         if patch_attachment['content_type'] == ATTACHMENT_TYPE_MOZREVIEW:
@@ -94,6 +100,8 @@ def has_mozreview_markers(attachments):
 
 
 def has_bmo_patch_review_markers(attachments, bug_history):
+    """Is there an attachment pointing to a reviewed patch?
+    """
     # 1. Does this bug have at least one patch attached?
     # Check for raw patches only, not x-phabricator-request or similar
     # patch attachments.
@@ -103,8 +111,7 @@ def has_bmo_patch_review_markers(attachments, bug_history):
 
     # 2. Does this bug have a review+ flag?
     # Don't balance review? and review+ changes, just assume that if there is
-    # one review+ flag then a review was complete and the change landed based
-    # on it.
+    # one review+ flag then a review was completed and the change landed.
     for change_group in bug_history:
         for change in change_group['changes']:
             if change['field_name'] != 'flagtypes.name':
