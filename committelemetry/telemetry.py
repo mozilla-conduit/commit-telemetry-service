@@ -214,6 +214,33 @@ def determine_review_system(revision_json):
     return ReviewSystem.unknown
 
 
+def send_ping(ping_id, payload):
+    """Send an event ping to the Mozilla telemetry service.
+
+    See http://docs.telemetry.mozilla.org for details.
+
+    Args:
+        ping_id: A unique ID string for this ping event. Used for event
+            de-duplication by the telemetry ingestion service.
+        payload: A JSON-serializable Python dict that will be sent as the
+            ping event payload.
+    """
+    log.info(f'sending ping: {payload}')
+
+    # We will send pings to the generic ping ingestion service.
+    # See https://docs.google.com/document/d/1PqiF1rF2fCk_kQuGSwGwildDf4Crg9MJTY44E6N5DSk
+    base_url = 'BASEURL'  # FIXME need a real service base URL
+    namespace = 'eng-workflow'
+    doctype = 'SOMEDOCTYPE'    # FIXME need a real doctype
+    docversion = 'SOMEDOCVERSION'  # FIXME need a real doc version
+    docid = ping_id
+    url = f'{base_url}/{namespace}/{doctype}/{docversion}/{docid}'
+
+    # TODO temporary until we have a real service endpoint to send to
+    #response = requests.post(url, json=payload)
+    #response.raise_for_status()
+
+
 class Error(Exception):
     """Generic error class for this module."""
 

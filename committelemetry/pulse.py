@@ -10,7 +10,7 @@ import logging
 
 from kombu import Connection, Exchange, Queue
 
-from committelemetry.telemetry import payload_for_changeset
+from committelemetry.telemetry import payload_for_changeset, send_ping
 
 log = logging.getLogger(__name__)
 
@@ -52,10 +52,7 @@ def process_push_message(body, message):
 
     # Pings need a unique ID so they can be de-duplicated by the ingestion
     # service.  We can use the changeset ID for the unique key.
-    #send_ping(changeset, ping)
-    print(
-        f'sending ping: {ping}'
-    )  # TODO shim until the real telemetry service endpoint is ready
+    send_ping(changeset, ping)
 
     message.ack()
 
