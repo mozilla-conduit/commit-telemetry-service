@@ -13,7 +13,6 @@ import requests
 
 log = logging.getLogger(__name__)
 
-
 # Bugzilla attachment types
 ATTACHMENT_TYPE_MOZREVIEW = 'text/x-review-board-request'
 ATTACHMENT_TYPE_GITHUB = 'text/x-github-request'
@@ -124,11 +123,15 @@ def payload_for_changeset(changesetid, repo_url):
 
     Args:
         changesetid: The 40 hex char changeset ID for the given repo.
-        repo: The URL of the repo the changeset lives in.
+        repo_url: The URL of the repo the changeset lives in.
 
     Returns:
         A dict that can be turned into JSON and posted to the
         telemetry.mozilla.org service.
+
+    Raises:
+        NoSuchChangeset: the requested changeset ID does not exist in the given
+        mercurial repository.
     """
     # Example URL: https://hg.mozilla.org/mozilla-central/json-rev/deafa2891c61
     response = requests.get(f'{repo_url}/json-rev/{changesetid}')
@@ -146,11 +149,25 @@ def payload_for_changeset(changesetid, repo_url):
 
 
 def determine_review_system(revision_json):
+    """Look for review system markers and guess which review system was used.
+
+    Args:
+        revision_json: A JSON structure for a specific changeset ID.  The
+            structure is return by Mercurial's hgweb. For example:
+            https://hg.mozilla.org/mozilla-central/json-rev/deafa2891c61
+
+    Returns:
+        A ReviewSystem enum value representing our guess about which review
+        system was used, if any.
+    """
     summary = revision_json['desc']
     changeset = revision_json['node']
 
     # 0. Check for changesets that don't need review.
     if has_backout_markers(summary) or has_merge_markers(revision_json):
+        log.info(
+            f'no review system for changeset {changeset}: changeset is a back-out or merge commit'
+        )
         return ReviewSystem.not_applicable
 
     # 1. Check for Phabricator because it's easiest.
@@ -162,14 +179,18 @@ def determine_review_system(revision_json):
     try:
         bug_id = parse_bugs(summary).pop()
     except IndexError:
-        log.info(f'could not determine review system for changeset {changeset}: unable to find a bug id in the changeset summary')
+        log.info(
+            f'could not determine review system for changeset {changeset}: unable to find a bug id in the changeset summary'
+        )
         return ReviewSystem.unknown
 
     try:
         attachments = fetch_attachments(bug_id)
         bug_history = fetch_bug_history(bug_id)
     except requests.exceptions.HTTPError as err:
-        log.info(f'could not determine review system for changeset {changeset} with bug {bug_id}: {err}')
+        log.info(
+            f'could not determine review system for changeset {changeset} with bug {bug_id}: {err}'
+        )
         return ReviewSystem.unknown
 
     # 2. Check BMO for MozReview review markers because that's next-easiest.
@@ -180,6 +201,9 @@ def determine_review_system(revision_json):
     if has_bmo_patch_review_markers(attachments, bug_history):
         return ReviewSystem.bmo
 
+    log.info(
+        f'could not determine review system for changeset {changeset} with bug {bug_id}: the changeset is missing all known review system markers'
+    )
     return ReviewSystem.unknown
 
 
