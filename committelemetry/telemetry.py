@@ -4,11 +4,15 @@
 """
 Functions for calculating commit telemetry and serializing the results.
 """
+import logging
 import re
 from enum import Enum
 
 from mozautomation.commitparser import parse_bugs
 import requests
+
+log = logging.getLogger(__name__)
+
 
 # Bugzilla attachment types
 ATTACHMENT_TYPE_MOZREVIEW = 'text/x-review-board-request'
@@ -143,6 +147,7 @@ def payload_for_changeset(changesetid, repo_url):
 
 def determine_review_system(revision_json):
     summary = revision_json['desc']
+    changeset = revision_json['node']
 
     # 0. Check for changesets that don't need review.
     if has_backout_markers(summary) or has_merge_markers(revision_json):
@@ -157,12 +162,15 @@ def determine_review_system(revision_json):
     try:
         bug_id = parse_bugs(summary).pop()
     except IndexError:
-        # We couldn't find a bug ID in the summary.
-        # FIXME: how do we account for these in analytics?
+        log.info(f'could not determine review system for changeset {changeset}: unable to find a bug id in the changeset summary')
         return ReviewSystem.unknown
 
-    attachments = fetch_attachments(bug_id)
-    bug_history = fetch_bug_history(bug_id)
+    try:
+        attachments = fetch_attachments(bug_id)
+        bug_history = fetch_bug_history(bug_id)
+    except requests.exceptions.HTTPError as err:
+        log.info(f'could not determine review system for changeset {changeset} with bug {bug_id}: {err}')
+        return ReviewSystem.unknown
 
     # 2. Check BMO for MozReview review markers because that's next-easiest.
     if has_mozreview_markers(attachments):
