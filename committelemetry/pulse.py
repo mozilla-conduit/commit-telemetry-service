@@ -10,6 +10,7 @@ import logging
 
 from kombu import Connection, Exchange, Queue
 
+from committelemetry import config
 from committelemetry.telemetry import payload_for_changeset, send_ping
 
 log = logging.getLogger(__name__)
@@ -78,16 +79,15 @@ def run_pulse_listener(username, password, timeout):
 
     try:
         hgpush_exchange = Exchange(
-            'exchange/hgpushes/v2', 'topic', channel=connection
-        )  # TODO make exchange name configurable
+            config.PULSE_EXCHANGE, 'topic', channel=connection
+        )
 
         # Pulse queue names need to be prefixed with the username
-        queue_name = f'queue/{username}/hgpush_commit_telemetry'  # TODO make queue name configurable
+        queue_name = f'queue/{username}/{config.PULSE_QUEUE_NAME}'
         queue = Queue(
             queue_name,
             exchange=hgpush_exchange,
-            routing_key=
-            'integration/mozilla-inbound',  # TODO make routing key configurable
+            routing_key=config.PULSE_QUEUE_ROUTING_KEY,
             durable=True,
             exclusive=False,
             auto_delete=False,

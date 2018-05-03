@@ -12,15 +12,14 @@ from enum import Enum
 import requests
 from mozautomation.commitparser import parse_bugs
 
+from committelemetry import config
+
 log = logging.getLogger(__name__)
 
 # Bugzilla attachment types
 ATTACHMENT_TYPE_MOZREVIEW = 'text/x-review-board-request'
 ATTACHMENT_TYPE_GITHUB = 'text/x-github-request'
 ATTACHMENT_TYPE_PHABRICATOR = 'text/x-phabricator-request'
-
-# FIXME turn this into an environment variable
-BMO_API_URL = 'https://bugzilla.mozilla.org/rest'
 
 # Match "Differential Revision: https://phabricator.services.mozilla.com/D861"
 PHABRICATOR_COMMIT_RE = re.compile(
@@ -58,7 +57,7 @@ def is_patch(attachment):
 def fetch_attachments(bug_id):
     """Fetch the given bug's attachment list from Bugzilla."""
     # Example: https://bugzilla.mozilla.org/rest/bug/1447193/attachment?exclude_fields=data
-    url = f'{BMO_API_URL}/bug/{bug_id}/attachment?exclude_fields=data'
+    url = f'{config.BMO_API_URL}/bug/{bug_id}/attachment?exclude_fields=data'
     response = requests.get(url)
     response.raise_for_status()
     attachments = response.json()['bugs'][str(bug_id)]
@@ -68,7 +67,7 @@ def fetch_attachments(bug_id):
 def fetch_bug_history(bug_id):
     """Fetch the given bug's history from Bugzilla."""
     # Example: https://bugzilla.mozilla.org/rest/bug/1447193/history
-    url = f'{BMO_API_URL}/bug/{bug_id}/history'
+    url = f'{config.BMO_API_URL}/bug/{bug_id}/history'
     response = requests.get(url)
     response.raise_for_status()
     history = response.json()['bugs'][0]['history']
