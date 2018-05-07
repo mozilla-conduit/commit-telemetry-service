@@ -9,6 +9,7 @@ import logging
 
 import requests
 
+from committelemetry import config
 from committelemetry.classifier import determine_review_system
 
 log = logging.getLogger(__name__)
@@ -61,16 +62,15 @@ def send_ping(ping_id, payload):
 
     # We will send pings to the generic ping ingestion service.
     # See https://docs.google.com/document/d/1PqiF1rF2fCk_kQuGSwGwildDf4Crg9MJTY44E6N5DSk
-    base_url = 'BASEURL'  # FIXME need a real service base URL
-    namespace = 'eng-workflow'
-    doctype = 'SOMEDOCTYPE'  # FIXME need a real doctype
-    docversion = 'SOMEDOCVERSION'  # FIXME need a real doc version
+    base_url = config.TMO_BASE_URL
+    namespace = config.TMO_PING_NAMESPACE
+    doctype = config.TMO_PING_DOCTYPE
+    docversion = config.TMO_PING_DOCVERSION
     docid = ping_id
     url = f'{base_url}/{namespace}/{doctype}/{docversion}/{docid}'
 
-    # TODO temporary until we have a real service endpoint to send to
-    #response = requests.post(url, json=payload)
-    #response.raise_for_status()
+    response = requests.put(url, json=payload)
+    response.raise_for_status()
 
 
 class Error(Exception):
