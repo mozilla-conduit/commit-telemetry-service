@@ -7,6 +7,7 @@ Functions for listening to the Mozilla Pulse service.
 See https://wiki.mozilla.org/Auto-tools/Projects/Pulse
 """
 import logging
+from contextlib import closing
 
 from kombu import Connection, Exchange, Queue
 
@@ -77,7 +78,7 @@ def run_pulse_listener(username, password, timeout):
         max_retries=1
     )  # Retries must be >=1 or it will retry forever.
 
-    try:
+    with closing(connection):
         hgpush_exchange = Exchange(
             config.PULSE_EXCHANGE, 'topic', channel=connection
         )
@@ -111,5 +112,3 @@ def run_pulse_listener(username, password, timeout):
         ) as consumer:
             log.info('reading messages')
             connection.drain_events(timeout=timeout)
-    finally:
-        connection.release()
