@@ -30,6 +30,7 @@ def dump_telemetry(debug, target_repo, node_id):
     """Dump the commit telemetry JSON for the given mercurial changeset ID."""
     if debug:
         print(f'Checking repo {target_repo}')
+        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
     try:
         ping = payload_for_changeset(node_id, target_repo)
