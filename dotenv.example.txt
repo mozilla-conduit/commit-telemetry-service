@@ -1,0 +1,35 @@
+# Example .env file for this service.
+#
+# Copy it and fill in your own values.
+
+# For reading message from the Mozilla Pulse messaging service.
+# See https://wiki.mozilla.org/Auto-tools/Projects/Pulse
+# You shouldn't need to change the default.
+#PULSE_EXCHANGE=exchange/hgpushes/v2
+
+# The credentials for this Pulse queue listener account.
+# See https://wiki.mozilla.org/Auto-tools/Projects/Pulse
+PULSE_USERNAME=your-pulse-username
+PULSE_PASSWORD=***secret***
+
+# The script will create a durable queue with this name to receive messages
+# from.  Pick a unique name and enter that name here.
+PULSE_QUEUE_NAME=my-commit-telemetry-queue
+
+# The routing key indicating the pulse queue messages you want to receive.
+# You want to set something like 'integration/mozilla-inbound'.
+PULSE_QUEUE_ROUTING_KEY=integration/mozilla-inbound
+
+# For sending pings to the generic ping ingestion service.
+# See https://docs.google.com/document/d/1PqiF1rF2fCk_kQuGSwGwildDf4Crg9MJTY44E6N5DSk
+# You shouldn't need to change the default.
+#TMO_BASE_URL=http://incoming.telemetry.mozilla.org/submit
+
+# These values come from our telemetry.mozilla.org data collection schema.
+TMO_PING_NAMESPACE=eng-workflow
+TMO_PING_DOCTYPE=hgpush
+TMO_PING_DOCVERSION=1
+
+# The bugzilla instance to read code review data from.
+# For testing, you shouldn't need to change the default.
+#BMO_API_URL=https://bugzilla.mozilla.org/rest
