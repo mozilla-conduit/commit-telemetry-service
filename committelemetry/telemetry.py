@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 def payload_for_changeset(changesetid, repo_url):
     """Build a telemetry.mozilla.org ping payload for the given changeset ID.
 
-    The payload conforms to the 'commit-pipeline/mozilla-central-commit' schema.
+    The payload conforms to https://github.com/mozilla-services/mozilla-pipeline-schemas/blob/dev/schemas/eng-workflow/hgpush/hgpush.1.schema.json
 
     Args:
         changesetid: The 40 hex char changeset ID for the given repo.
@@ -26,7 +26,7 @@ def payload_for_changeset(changesetid, repo_url):
 
     Returns:
         A dict that can be turned into JSON and posted to the
-        telemetry.mozilla.org service.
+        telemetry.mozilla.org service.  See https://github.com/mozilla-services/mozilla-pipeline-schemas/blob/dev/schemas/eng-workflow/hgpush/hgpush.1.schema.json
 
     Raises:
         NoSuchChangeset: the requested changeset ID does not exist in the given
@@ -41,10 +41,18 @@ def payload_for_changeset(changesetid, repo_url):
         )
 
     response.raise_for_status()
+    pushdata = response.json()
 
-    system = determine_review_system(response.json())
+    system = determine_review_system(pushdata)
 
-    return {'changesetID': changesetid, 'reviewSystemUsed': system.value}
+    utc_pushdate = utc_hgwebdate(pushdata['pushdate'])
+
+    return {
+        'changesetID': changesetid,
+        'reviewSystemUsed': system.value,
+        'repository': repo_url,
+        'pushDate': utc_pushdate
+    }
 
 
 def send_ping(ping_id, payload):
@@ -71,6 +79,28 @@ def send_ping(ping_id, payload):
 
     response = requests.put(url, json=payload)
     response.raise_for_status()
+
+
+def utc_hgwebdate(hgweb_datejson):
+    """Turn a (unixtime, offset) tuple back into a UTC Unix timestamp.
+
+    Pushlog entries are not in UTC, but a tuple of (local-unixtime, utc-offset)
+    created by
+    https://www.mercurial-scm.org/repo/hg/file/8b86acc7aa64/mercurial/utils/dateutil.py#l63.
+    This function reverses the operation that created the tuple.
+
+    Args:
+        hgweb_datejson: A 2-element JSON list of ints.
+            For example: https://hg.mozilla.org/mozilla-central/json-rev/deafa2891c61
+            See https://www.mercurial-scm.org/repo/hg/file/8b86acc7aa64/mercurial/utils/dateutil.py#l63
+            for how this value is created.
+
+    Returns:
+        The UTC Unix time (seconds since the epoch), as an int.
+    """
+    assert len(hgweb_datejson) == 2
+    timestamp, offset = hgweb_datejson
+    return timestamp + offset
 
 
 class Error(Exception):
