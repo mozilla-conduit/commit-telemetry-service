@@ -152,7 +152,14 @@ def determine_review_system(revision_json):
 
     # TODO handle multiple bugs?
     try:
-        bug_id = parse_bugs(summary).pop()
+        # Take the first bug # found.  For Firefox commits this is usually at
+        # the front of the string, like "Bug XXXXXX - fix the bar".  try to
+        # avoid messages where there is a second ID in the message, like
+        # 'Bug 1458766 [wpt PR 10812] - [LayoutNG] ...'.
+        # NOTE: Bugs with the BMO bug # at the end will still get the wrong ID,
+        # such as:
+        # '[wpt PR 10812] blah blah (bug 1111111) r=foo'
+        bug_id = parse_bugs(summary)[0]
     except IndexError:
         log.info(
             f'could not determine review system for changeset {changeset}: unable to find a bug id in the changeset summary'
