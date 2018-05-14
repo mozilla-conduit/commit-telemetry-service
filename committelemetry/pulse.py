@@ -8,6 +8,7 @@ See https://wiki.mozilla.org/Auto-tools/Projects/Pulse
 """
 import logging
 from contextlib import closing
+from functools import partial
 
 import requests
 from kombu import Connection, Exchange, Queue
@@ -16,6 +17,10 @@ from committelemetry import config
 from committelemetry.telemetry import payload_for_changeset, send_ping
 
 log = logging.getLogger(__name__)
+
+
+def noop(*args, **kwargs):
+    return None
 
 
 def changesets_for_pushid(pushid, push_json_url):
@@ -45,7 +50,7 @@ def changesets_for_pushid(pushid, push_json_url):
     return changesets
 
 
-def process_push_message(body, message):
+def process_push_message(body, message, no_send=False):
     """Process a hg push message from Mozilla Pulse.
 
     The message body structure is described by https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/notifications.html#common-properties-of-notifications
@@ -55,7 +60,10 @@ def process_push_message(body, message):
     Args:
         body: The decoded JSON message body as a Python dict.
         message: A AMQP Message object.
+        no_send: Do not send any ping data or drain any queues.
     """
+    ack = noop if no_send else message.ack
+
     log.debug(f'received message: {message}')
 
     payload = body['payload']
@@ -64,7 +72,7 @@ def process_push_message(body, message):
     msgtype = payload['type']
     if msgtype != 'changegroup.1':
         log.info(f'skipped message of type {msgtype}')
-        message.ack()
+        ack()
         return
 
     pushlog_pushes = payload['data']['pushlog_pushes']
@@ -73,7 +81,7 @@ def process_push_message(body, message):
     pcount = len(pushlog_pushes)
     if pcount == 0:
         log.info(f'skipped message with zero pushes')
-        message.ack()
+        ack()
         return
     elif pcount > 1:
         # Raise this as a warning to draw attention.  According to
@@ -83,7 +91,7 @@ def process_push_message(body, message):
         log.warning(
             f'skipped invalid message with multiple pushes (expected 0 or 1, got {pcount})'
         )
-        message.ack()
+        ack()
         return
 
     pushdata = pushlog_pushes.pop()
@@ -96,14 +104,18 @@ def process_push_message(body, message):
         log.info(f'processing changeset {changeset}')
         ping = payload_for_changeset(changeset, repo_url)
 
+        if no_send:
+            log.info(f'ping data (not sent): {ping}')
+            continue
+
         # Pings need a unique ID so they can be de-duplicated by the ingestion
         # service.  We can use the changeset ID for the unique key.
         send_ping(changeset, ping)
 
-    message.ack()
+    ack()
 
 
-def run_pulse_listener(username, password, timeout):
+def run_pulse_listener(username, password, timeout, no_send):
     """Run a Pulse message queue listener.
 
     This function does not return.
@@ -149,10 +161,17 @@ def run_pulse_listener(username, password, timeout):
         queue.queue_declare()
         queue.queue_bind()
 
+        callback = partial(process_push_message, no_send=no_send)
+
         # Pass auto_declare=False so that Consumer does not try to declare the
         # exchange.  Declaring exchanges is not allowed by the Pulse server.
         with connection.Consumer(
-            queue, callbacks=[process_push_message], auto_declare=False
+            queue, callbacks=[callback], auto_declare=False
         ) as consumer:
+
+            if no_send:
+                log.info('transmission of ping data has been disabled')
+                log.info('message acks has been disabled')
+
             log.info('reading messages')
             connection.drain_events(timeout=timeout)

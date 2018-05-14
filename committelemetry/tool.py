@@ -67,7 +67,12 @@ def dump_telemetry(debug, target_repo, node_id):
     default=1.0,
     help='Timeout, in seconds, to wait for additional queue messages.'
 )
-def process_queue_messages(debug, user, password, timeout):
+@click.option(
+    '--no-send',
+    is_flag=True,
+    help='For testing. Do not send ping data or drain any queues.'
+)
+def process_queue_messages(debug, user, password, timeout, no_send):
     """Process all queued mercurial repo change messages."""
     if debug:
         log_level = logging.DEBUG
@@ -76,4 +81,4 @@ def process_queue_messages(debug, user, password, timeout):
 
     logging.basicConfig(stream=sys.stdout, level=log_level)
 
-    run_pulse_listener(user, password, timeout)
+    run_pulse_listener(user, password, timeout, no_send)
