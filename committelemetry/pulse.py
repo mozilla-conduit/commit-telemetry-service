@@ -9,12 +9,40 @@ See https://wiki.mozilla.org/Auto-tools/Projects/Pulse
 import logging
 from contextlib import closing
 
+import requests
 from kombu import Connection, Exchange, Queue
 
 from committelemetry import config
 from committelemetry.telemetry import payload_for_changeset, send_ping
 
 log = logging.getLogger(__name__)
+
+
+def changesets_for_pushid(pushid, push_json_url):
+    """Return a list of changeset IDs in a repository push.
+
+    Reads data published by the Mozilla hgweb pushlog extension.
+
+    Also see https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/pushlog.html#writing-agents-that-consume-pushlog-data
+
+    Args:
+        pushid: The integer pushlog pushid we want information about.
+        push_json_url: The 'push_json_url' field from a hgpush message.
+            See https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/notifications.html#changegroup-1
+            The pushid in the URL should match the pushid argument to this
+            function.
+
+    Returns:
+        A list of changeset ID strings (40 char hex strings).
+    """
+    log.info(f'processing pushid {pushid}')
+    response = requests.get(push_json_url)
+    response.raise_for_status()
+
+    # See https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/pushlog.html#version-2
+    changesets = response.json()['pushes'][str(pushid)]['changesets']
+    log.info(f'got {len(changesets)} changesets for pushid {pushid}')
+    return changesets
 
 
 def process_push_message(body, message):
@@ -31,30 +59,46 @@ def process_push_message(body, message):
     log.debug(f'received message: {message}')
 
     payload = body['payload']
+    log.debug(f'message payload: {payload}')
 
     msgtype = payload['type']
     if msgtype != 'changegroup.1':
         log.info(f'skipped message of type {msgtype}')
         message.ack()
+        return
 
-    heads = payload['data']['heads']
-    hcount = len(heads)
-    if hcount != 1:
-        log.info(
-            f'skipped message with multiple heads (expected 1, got {hcount})'
+    pushlog_pushes = payload['data']['pushlog_pushes']
+    # The count should always be 0 or 1.
+    # See https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/notifications.html#changegroup-1
+    pcount = len(pushlog_pushes)
+    if pcount == 0:
+        log.info(f'skipped message with zero pushes')
+        message.ack()
+        return
+    elif pcount > 1:
+        # Raise this as a warning to draw attention.  According to
+        # https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/notifications.html#changegroup-1
+        # this isn't supposed to happen, and we should contact the hgpush
+        # service admin in #vcs on IRC.
+        log.warning(
+            f'skipped invalid message with multiple pushes (expected 0 or 1, got {pcount})'
         )
         message.ack()
+        return
 
-    changeset = heads.pop()
+    pushdata = pushlog_pushes.pop()
+
     repo_url = payload['data']['repo_url']
-    log.debug(f'message repo URL is {repo_url}')
 
-    log.info(f'processing changeset {changeset}')
-    ping = payload_for_changeset(changeset, repo_url)
+    for changeset in changesets_for_pushid(
+        pushdata['pushid'], pushdata['push_json_url']
+    ):
+        log.info(f'processing changeset {changeset}')
+        ping = payload_for_changeset(changeset, repo_url)
 
-    # Pings need a unique ID so they can be de-duplicated by the ingestion
-    # service.  We can use the changeset ID for the unique key.
-    send_ping(changeset, ping)
+        # Pings need a unique ID so they can be de-duplicated by the ingestion
+        # service.  We can use the changeset ID for the unique key.
+        send_ping(changeset, ping)
 
     message.ack()
 
