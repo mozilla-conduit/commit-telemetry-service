@@ -8,6 +8,7 @@ import sys
 import click
 
 from committelemetry.pulse import run_pulse_listener
+from committelemetry.pushlog import send_pings_by_pushid
 from .telemetry import NoSuchChangeset, payload_for_changeset
 
 
@@ -82,3 +83,35 @@ def process_queue_messages(debug, user, password, timeout, no_send):
     logging.basicConfig(stream=sys.stdout, level=log_level)
 
     run_pulse_listener(user, password, timeout, no_send)
+
+
+@click.command()
+@click.option(
+    '--debug',
+    envvar='DEBUG',
+    is_flag=True,
+    help='Print debugging messages about the script\'s progress.'
+)
+@click.option(
+    '--no-send',
+    is_flag=True,
+    help='For testing. Do not send ping data or drain any queues.'
+)
+@click.argument('repo_url')
+@click.argument('starting_push_id')
+@click.argument('ending_push_id')
+def backfill_pushlog(debug, no_send, repo_url, starting_push_id, ending_push_id):
+    """Process repo pushes by pushlog ID."""
+    if debug:
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+
+    logging.basicConfig(stream=sys.stdout, level=log_level)
+
+    print(f'Checking repo {repo_url}')
+    print(f'Fetching pushes {starting_push_id} to {ending_push_id}')
+
+    send_pings_by_pushid(repo_url, starting_push_id, ending_push_id, no_send)
+
+    print('Done.')

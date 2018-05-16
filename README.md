@@ -64,6 +64,22 @@ Use `--help` for full command usage info.
 
 Use `--debug` for full command debug output.
 
+```console
+$ PYTHONPATH=. bin/backfill-pushlog REPO_URL STARTING_PUSHID ENDING_PUSHID
+```
+
+Read the Mercurial repository pushlog at REPO_URL, fetch all pushes from
+STARTING_PUSHID to ENDING_PUSHID, then calculate and publish their
+telemetry.  This can be used to back-fill pushes missed by service gaps. 
+
+Use `--help` for full command usage info.
+
+Use `--debug` for full command debug output.
+
+Use `--no-send` to gather all the data and build a payload, but do not
+send any real pings.
+
+
 ----
 
 ## Development
