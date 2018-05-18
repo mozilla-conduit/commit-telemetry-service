@@ -10,10 +10,10 @@ import logging
 from contextlib import closing
 from functools import partial
 
-import requests
 from kombu import Connection, Exchange, Queue
 
 from committelemetry import config
+from committelemetry.http import requests_retry_session
 from committelemetry.telemetry import payload_for_changeset, send_ping
 
 log = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ def changesets_for_pushid(pushid, push_json_url):
         A list of changeset ID strings (40 char hex strings).
     """
     log.info(f'processing pushid {pushid}')
-    response = requests.get(push_json_url)
+    response = requests_retry_session().get(push_json_url)
     response.raise_for_status()
 
     # See https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/pushlog.html#version-2

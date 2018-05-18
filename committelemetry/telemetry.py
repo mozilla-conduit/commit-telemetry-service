@@ -11,6 +11,7 @@ import requests
 
 from committelemetry import config
 from committelemetry.classifier import determine_review_system
+from committelemetry.http import requests_retry_session
 
 log = logging.getLogger(__name__)
 
@@ -33,7 +34,8 @@ def payload_for_changeset(changesetid, repo_url):
         mercurial repository.
     """
     # Example URL: https://hg.mozilla.org/mozilla-central/json-rev/deafa2891c61
-    response = requests.get(f'{repo_url}/json-rev/{changesetid}')
+    response = requests_retry_session(
+    ).get(f'{repo_url}/json-rev/{changesetid}')
 
     if response.status_code == 404:
         raise NoSuchChangeset(

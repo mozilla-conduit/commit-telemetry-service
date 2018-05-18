@@ -8,8 +8,7 @@ See https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/pushlog.
 """
 import logging
 
-import requests
-
+from committelemetry.http import requests_retry_session
 from committelemetry.telemetry import payload_for_changeset, send_ping
 
 log = logging.getLogger(__name__)
@@ -30,7 +29,9 @@ def pushes_for_range(repo_url, starting_push_id, ending_push_id):
     """
     # See https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/pushlog.html#version-2
     params = dict(startID=starting_push_id, endID=ending_push_id, version=2)
-    response = requests.get(f'{repo_url}/json-pushes/', params=params)
+    response = requests_retry_session().get(
+        f'{repo_url}/json-pushes/', params=params
+    )
     response.raise_for_status()
     pushlog = response.json()
     return pushlog['pushes']
@@ -49,7 +50,9 @@ def send_pings_by_pushid(repo_url, starting_push_id, ending_push_id, no_send):
     if no_send:
         log.info('transmission of ping data has been disabled')
 
-    for pushid, pushdata in pushes_for_range(repo_url, starting_push_id, ending_push_id).items():
+    for pushid, pushdata in pushes_for_range(
+        repo_url, starting_push_id, ending_push_id
+    ).items():
         log.info(f'processing pushid {pushid}')
 
         # See https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/pushlog.html#version-2

@@ -13,6 +13,7 @@ import requests
 from mozautomation.commitparser import parse_bugs
 
 from committelemetry import config
+from committelemetry.http import requests_retry_session
 
 log = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ def fetch_attachments(bug_id):
     """Fetch the given bug's attachment list from Bugzilla."""
     # Example: https://bugzilla.mozilla.org/rest/bug/1447193/attachment?exclude_fields=data
     url = f'{config.BMO_API_URL}/bug/{bug_id}/attachment?exclude_fields=data'
-    response = requests.get(url)
+    response = requests_retry_session().get(url)
 
     # TODO Workaround for bug 1462349.  Can be removed when API calls return the correct value.
     if 'error' in response.json():
@@ -73,7 +74,7 @@ def fetch_bug_history(bug_id):
     """Fetch the given bug's history from Bugzilla."""
     # Example: https://bugzilla.mozilla.org/rest/bug/1447193/history
     url = f'{config.BMO_API_URL}/bug/{bug_id}/history'
-    response = requests.get(url)
+    response = requests_retry_session().get(url)
 
     # TODO Workaround for bug 1462349.  Can be removed when API calls return the correct value.
     if 'error' in response.json():
