@@ -35,10 +35,22 @@ class ReviewSystem(Enum):
     """The review system used for a commit.
 
     Enum values are serialized for sending as telemetry.
+
+    Attributes:
+        phabricator Indicates the commit was reviewed with Phabricator.
+        mozreview: Indicates the commit was reviewed with MozReview.
+        bmo: Indicates the commit was reviewed in bugzilla.mozilla.org.
+        no_bug: Indicates that the process to determine the review system had to
+            stop because the commit summary clearly stated 'no bug' or access to
+            the bug in the commit summary was denied.
+        unknown: Indicates that the commit data and bug data have no markers
+            that we know of to determine how (or if) the commit was reviewed.
+        not_applicable: Indicates the commit was a back-out, merge, etc.
     """
     phabricator = 'phabricator'
     mozreview = 'mozreview'
     bmo = 'bmo'
+    no_bug = 'no_bug'
     unknown = 'unknown'
     not_applicable = 'not_applicable'
 
@@ -65,6 +77,9 @@ def fetch_attachments(bug_id):
     if 'error' in response.json():
         response.status_code = 401
 
+    if response.status_code == 401:
+        raise NotAuthorized()
+
     response.raise_for_status()
     attachments = response.json()['bugs'][str(bug_id)]
     return attachments
@@ -79,6 +94,9 @@ def fetch_bug_history(bug_id):
     # TODO Workaround for bug 1462349.  Can be removed when API calls return the correct value.
     if 'error' in response.json():
         response.status_code = 401
+
+    if response.status_code == 401:
+        raise NotAuthorized()
 
     response.raise_for_status()
     history = response.json()['bugs'][0]['history']
@@ -134,6 +152,12 @@ def has_bmo_patch_review_markers(attachments, bug_history):
     return False
 
 
+def has_no_bug_marker(summary: str) -> bool:
+    """Does the commit summary explicitly say 'no bug'?"""
+    lsummary = summary.lower()
+    return lsummary.startswith('no bug')
+
+
 def determine_review_system(revision_json):
     """Look for review system markers and guess which review system was used.
 
@@ -155,6 +179,9 @@ def determine_review_system(revision_json):
             f'no review system for changeset {changeset}: changeset is a back-out or merge commit'
         )
         return ReviewSystem.not_applicable
+    elif has_no_bug_marker(summary):
+        log.info(f'changeset {changeset}: summary is marked "no bug"')
+        return ReviewSystem.no_bug
 
     # 1. Check for Phabricator because it's easiest.
     # TODO can we rely on BMO attachments for this?
@@ -171,6 +198,7 @@ def determine_review_system(revision_json):
         # such as:
         # '[wpt PR 10812] blah blah (bug 1111111) r=foo'
         bug_id = parse_bugs(summary)[0]
+        log.debug(f'changeset {changeset}: parsed bug ID {bug_id}')
     except IndexError:
         log.info(
             f'could not determine review system for changeset {changeset}: unable to find a bug id in the changeset summary'
@@ -180,6 +208,11 @@ def determine_review_system(revision_json):
     try:
         attachments = fetch_attachments(bug_id)
         bug_history = fetch_bug_history(bug_id)
+    except NotAuthorized:
+        log.info(f'changeset {changeset}: not authorized to view bug {bug_id}')
+        # For reporting purposes explicitly lump commits with confidential
+        # bugs in with commits that have a 'no bug - do stuff' summary line.
+        return ReviewSystem.no_bug
     except requests.exceptions.HTTPError as err:
         log.info(
             f'could not determine review system for changeset {changeset} with bug {bug_id}: {err}'
@@ -198,6 +231,14 @@ def determine_review_system(revision_json):
         f'could not determine review system for changeset {changeset} with bug {bug_id}: the changeset is missing all known review system markers'
     )
     return ReviewSystem.unknown
+
+
+class Error(Exception):
+    """Generic error"""
+
+
+class NotAuthorized(Error):
+    """We are not authorized to view this HTTP resource"""
 
 
 # Test revs:
