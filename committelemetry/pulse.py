@@ -7,6 +7,7 @@ Functions for listening to the Mozilla Pulse service.
 See https://wiki.mozilla.org/Auto-tools/Projects/Pulse
 """
 import logging
+import socket
 from contextlib import closing
 from functools import partial
 
@@ -116,10 +117,7 @@ def process_push_message(body, message, no_send=False):
 
 
 def run_pulse_listener(username, password, timeout, no_send):
-    """Run a Pulse message queue listener.
-
-    This function does not return.
-    """
+    """Run a Pulse message queue listener."""
     connection = Connection(
         hostname='pulse.mozilla.org',
         port=5671,
@@ -174,4 +172,9 @@ def run_pulse_listener(username, password, timeout, no_send):
                 log.info('message acks has been disabled')
 
             log.info('reading messages')
-            connection.drain_events(timeout=timeout)
+            try:
+                connection.drain_events(timeout=timeout)
+            except socket.timeout:
+                log.info('message queue is empty, nothing to do')
+
+    log.info('done')
