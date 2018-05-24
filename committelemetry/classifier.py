@@ -24,11 +24,14 @@ ATTACHMENT_TYPE_PHABRICATOR = 'text/x-phabricator-request'
 
 # Match "Differential Revision: https://phabricator.services.mozilla.com/D861"
 PHABRICATOR_COMMIT_RE = re.compile(
-    'Differential Revision: ([\w:/.]*)(D[0-9]{3,})'
+    r'Differential Revision: ([\w:/.]*)(D[0-9]{3,})'
 )
 
 # Match "Backed out 4 changesets (bug 1448077) for xpcshell failures at..."
-BACKOUT_RE = re.compile('^back(ed|ing|) out ', re.IGNORECASE)
+BACKOUT_RE = re.compile(r'^back(ed|ing|) out ', re.IGNORECASE)
+
+# Match 'no bug' anywhere in the commit message summary
+NOBUG_RE = re.compile(r'\bno bug\b', re.IGNORECASE)
 
 
 class ReviewSystem(Enum):
@@ -154,8 +157,7 @@ def has_bmo_patch_review_markers(attachments, bug_history):
 
 def has_no_bug_marker(summary: str) -> bool:
     """Does the commit summary explicitly say 'no bug'?"""
-    lsummary = summary.lower()
-    return lsummary.startswith('no bug')
+    return bool(re.search(NOBUG_RE, summary))
 
 
 def determine_review_system(revision_json):
