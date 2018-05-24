@@ -160,6 +160,16 @@ def has_no_bug_marker(summary: str) -> bool:
     return bool(re.search(NOBUG_RE, summary))
 
 
+def split_summary(s: str) -> str:
+    """Split a commit message summary from the long-form description.
+
+    For a commit message with a summary line of 'bug 1234 - foo', followed
+    by a blank line and a longer commit description body, this function will
+    return just the summary line.
+    """
+    return s.splitlines()[0]
+
+
 def determine_review_system(revision_json):
     """Look for review system markers and guess which review system was used.
 
@@ -172,7 +182,8 @@ def determine_review_system(revision_json):
         A ReviewSystem enum value representing our guess about which review
         system was used, if any.
     """
-    summary = revision_json['desc']
+    fulldesc = revision_json['desc']
+    summary = split_summary(fulldesc)
     changeset = revision_json['node']
 
     # 0. Check for changesets that don't need review.
@@ -187,7 +198,7 @@ def determine_review_system(revision_json):
 
     # 1. Check for Phabricator because it's easiest.
     # TODO can we rely on BMO attachments for this?
-    if has_phab_markers(summary):
+    if has_phab_markers(fulldesc):
         return ReviewSystem.phabricator
 
     # TODO handle multiple bugs?

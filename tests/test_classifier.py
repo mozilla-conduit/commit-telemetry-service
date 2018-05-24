@@ -36,3 +36,16 @@ def null_config(monkeypatch):
 def test_nobug_marker(test_input, expected):
     from committelemetry.classifier import has_no_bug_marker
     assert has_no_bug_marker(test_input) == expected
+
+
+@pytest.mark.parametrize(
+    "test_input,expected", [
+        ("foo",             "foo"),
+        ("foo\nbar\nbaz",   "foo"),
+    ]
+) # yapf: disable
+def test_summary_splitting(test_input, expected):
+    from committelemetry.classifier import split_summary
+    assert split_summary(test_input) == expected
+
+
