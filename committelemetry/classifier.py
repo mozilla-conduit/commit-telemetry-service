@@ -33,6 +33,9 @@ BACKOUT_RE = re.compile(r'^back(ed|ing|) out ', re.IGNORECASE)
 # Match 'no bug' anywhere in the commit message summary
 NOBUG_RE = re.compile(r'\bno bug\b', re.IGNORECASE)
 
+# Match '[wpt PR 1234] - summary a=testonly'
+WPT_SYNC_BOT_RE = re.compile(r'\[wpt PR \d+\](.*) a=testonly')
+
 
 class ReviewSystem(Enum):
     """The review system used for a commit.
@@ -160,6 +163,15 @@ def has_no_bug_marker(summary: str) -> bool:
     return bool(re.search(NOBUG_RE, summary))
 
 
+def has_wpt_uplift_markers(summary: str) -> bool:
+    """Was this commit by the Web Platform Test Sync Bot?
+
+    See https://hg.mozilla.org/mozilla-central/rev/e2dced9fda47999677b840a58f5e39b2217881e8
+    for an example commit.
+    """
+    return bool(re.search(WPT_SYNC_BOT_RE, summary))
+
+
 def split_summary(s: str) -> str:
     """Split a commit message summary from the long-form description.
 
@@ -195,6 +207,13 @@ def determine_review_system(revision_json):
     elif has_no_bug_marker(summary):
         log.info(f'changeset {changeset}: summary is marked "no bug"')
         return ReviewSystem.no_bug
+    elif has_wpt_uplift_markers(summary):
+        # This commit was requested by a bot account that vendors an external
+        # project into the tree.  We can ignore it.
+        log.info(
+            f'changeset {changeset}: changeset was requested by moz-wptsync-bot'
+        )
+        return ReviewSystem.not_applicable
 
     # 1. Check for Phabricator because it's easiest.
     # TODO can we rely on BMO attachments for this?

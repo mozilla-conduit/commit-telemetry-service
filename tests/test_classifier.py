@@ -49,3 +49,14 @@ def test_summary_splitting(test_input, expected):
     assert split_summary(test_input) == expected
 
 
+@pytest.mark.parametrize(
+    "test_input,expected", [
+        ("Bug 123 - [wpt PR 123] foo bar a=testonly", True),
+        ("Bug 123 - [wpt PR 123] foo bar a=testonly extra", True),
+        ("Bug 123 - [wpt PR 123]",          False),
+        ("Bug 123 - foo bar a=testonly",    False),
+    ]
+) # yapf: disable
+def test_has_wpt_uplift_markers(test_input, expected):
+    from committelemetry.classifier import has_wpt_uplift_markers
+    assert has_wpt_uplift_markers(test_input) == expected
