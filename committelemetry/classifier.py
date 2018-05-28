@@ -163,13 +163,14 @@ def has_no_bug_marker(summary: str) -> bool:
     return bool(re.search(NOBUG_RE, summary))
 
 
-def has_wpt_uplift_markers(summary: str) -> bool:
+def has_wpt_uplift_markers(commit_author: str, summary: str) -> bool:
     """Was this commit by the Web Platform Test Sync Bot?
 
     See https://hg.mozilla.org/mozilla-central/rev/e2dced9fda47999677b840a58f5e39b2217881e8
     for an example commit.
     """
-    return bool(re.search(WPT_SYNC_BOT_RE, summary))
+    return bool(re.search(WPT_SYNC_BOT_RE, summary)) \
+           or (commit_author == "moz-wptsync-bot <wptsync@mozilla.com>")
 
 
 def split_summary(s: str) -> str:
@@ -197,6 +198,7 @@ def determine_review_system(revision_json):
     fulldesc = revision_json['desc']
     summary = split_summary(fulldesc)
     changeset = revision_json['node']
+    author = revision_json['user']
 
     # 0. Check for changesets that don't need review.
     if has_backout_markers(summary) or has_merge_markers(revision_json):
@@ -207,7 +209,7 @@ def determine_review_system(revision_json):
     elif has_no_bug_marker(summary):
         log.info(f'changeset {changeset}: summary is marked "no bug"')
         return ReviewSystem.no_bug
-    elif has_wpt_uplift_markers(summary):
+    elif has_wpt_uplift_markers(author, summary):
         # This commit was requested by a bot account that vendors an external
         # project into the tree.  We can ignore it.
         log.info(

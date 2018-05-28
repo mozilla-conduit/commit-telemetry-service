@@ -57,6 +57,14 @@ def test_summary_splitting(test_input, expected):
         ("Bug 123 - foo bar a=testonly",    False),
     ]
 ) # yapf: disable
-def test_has_wpt_uplift_markers(test_input, expected):
+def test_has_wpt_uplift_markers_in_summary(test_input, expected):
     from committelemetry.classifier import has_wpt_uplift_markers
-    assert has_wpt_uplift_markers(test_input) == expected
+    assert has_wpt_uplift_markers('', test_input) == expected
+
+
+def test_has_wpt_uplift_markers_if_syncbot_is_author():
+    from committelemetry.classifier import has_wpt_uplift_markers
+    assert has_wpt_uplift_markers(
+        "moz-wptsync-bot <wptsync@mozilla.com>", "summary"
+    )
+    assert not has_wpt_uplift_markers("someone <anon@mozilla.com>", "summary")
