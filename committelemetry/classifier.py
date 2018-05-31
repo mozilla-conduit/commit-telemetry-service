@@ -14,6 +14,7 @@ from mozautomation.commitparser import parse_bugs
 
 from committelemetry import config
 from committelemetry.http import requests_retry_session
+from committelemetry.sentry import client as sentry
 
 log = logging.getLogger(__name__)
 
@@ -234,9 +235,9 @@ def determine_review_system(revision_json):
         bug_id = parse_bugs(summary)[0]
         log.debug(f'changeset {changeset}: parsed bug ID {bug_id}')
     except IndexError:
-        log.info(
-            f'could not determine review system for changeset {changeset}: unable to find a bug id in the changeset summary'
-        )
+        msg = f'could not determine review system for changeset {changeset}: unable to find a bug id in the changeset summary'
+        log.info(msg)
+        sentry.captureMessage(msg)
         return ReviewSystem.unknown
 
     try:
@@ -248,9 +249,9 @@ def determine_review_system(revision_json):
         # bugs in with commits that have a 'no bug - do stuff' summary line.
         return ReviewSystem.no_bug
     except requests.exceptions.HTTPError as err:
-        log.info(
-            f'could not determine review system for changeset {changeset} with bug {bug_id}: {err}'
-        )
+        msg = f'could not determine review system for changeset {changeset} with bug {bug_id}: {err}'
+        log.info(msg)
+        sentry.captureMessage(msg)
         return ReviewSystem.unknown
 
     # 2. Check BMO for MozReview review markers because that's next-easiest.
@@ -261,9 +262,9 @@ def determine_review_system(revision_json):
     if has_bmo_patch_review_markers(attachments, bug_history):
         return ReviewSystem.bmo
 
-    log.info(
-        f'could not determine review system for changeset {changeset} with bug {bug_id}: the changeset is missing all known review system markers'
-    )
+    msg = f'could not determine review system for changeset {changeset} with bug {bug_id}: the changeset is missing all known review system markers'
+    log.info(msg)
+    sentry.captureMessage(msg)
     return ReviewSystem.unknown
 
 

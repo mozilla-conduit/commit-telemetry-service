@@ -75,6 +75,9 @@ def dump_telemetry(debug, target_repo, node_id):
 )
 def process_queue_messages(debug, user, password, timeout, no_send):
     """Process all queued mercurial repo change messages."""
+    # Importing the Sentry client will automatically configure it and install
+    # it as the process-wide sys.excepthook handler.
+
     if debug:
         log_level = logging.DEBUG
     else:
@@ -100,7 +103,9 @@ def process_queue_messages(debug, user, password, timeout, no_send):
 @click.argument('repo_url')
 @click.argument('starting_push_id')
 @click.argument('ending_push_id')
-def backfill_pushlog(debug, no_send, repo_url, starting_push_id, ending_push_id):
+def backfill_pushlog(
+    debug, no_send, repo_url, starting_push_id, ending_push_id
+):
     """Process repo pushes by pushlog ID."""
     if debug:
         log_level = logging.DEBUG

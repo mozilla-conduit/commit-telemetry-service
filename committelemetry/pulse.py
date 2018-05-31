@@ -16,6 +16,7 @@ from kombu import Connection, Exchange, Queue
 from committelemetry import config
 from committelemetry.http import requests_retry_session
 from committelemetry.telemetry import payload_for_changeset, send_ping
+from committelemetry.sentry import client as sentry
 
 log = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ def changesets_for_pushid(pushid, push_json_url):
         A list of changeset ID strings (40 char hex strings).
     """
     log.info(f'processing pushid {pushid}')
+    sentry.extra_context({'pushid': pushid})
     response = requests_retry_session().get(push_json_url)
     response.raise_for_status()
 
@@ -103,6 +105,7 @@ def process_push_message(body, message, no_send=False):
         pushdata['pushid'], pushdata['push_json_url']
     ):
         log.info(f'processing changeset {changeset}')
+        sentry.extra_context({'changeset': changeset})
         ping = payload_for_changeset(changeset, repo_url)
 
         if no_send:
