@@ -50,3 +50,17 @@ def test_has_wpt_uplift_markers_if_syncbot_is_author():
         "moz-wptsync-bot <wptsync@mozilla.com>", "summary"
     )
     assert not has_wpt_uplift_markers("someone <anon@mozilla.com>", "summary")
+
+
+@pytest.mark.parametrize(
+    "test_input,expected", [
+        ("Bug 123 - foo bar a=testonly", True),
+        ("Bug 123 - foo bar a=testonly extra", True),
+        ("Bug 123 - foo bar a=multiple,somethings r=me", True),
+        ("Bug 123 - foo bar a=merge", True),
+        ("Bug 123 - r=testonly", False),
+    ]
+) # yapf: disable
+def test_has_uplift_markers(test_input, expected):
+    from committelemetry.classifier import has_uplift_markers
+    assert has_uplift_markers(test_input) == expected

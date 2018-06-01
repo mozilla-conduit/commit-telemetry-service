@@ -50,14 +50,17 @@ class ReviewSystem(Enum):
         no_bug: Indicates that the process to determine the review system had to
             stop because the commit summary clearly stated 'no bug' or access to
             the bug in the commit summary was denied.
+        review_unneeded: For commits that do not need review, like back-outs,
+            uplifts on a closed tree, or commits flagged with a=testonly.
         unknown: Indicates that the commit data and bug data have no markers
             that we know of to determine how (or if) the commit was reviewed.
-        not_applicable: Indicates the commit was a back-out, merge, etc.
+        not_applicable: Indicates the commit was a merge, etc.
     """
     phabricator = 'phabricator'
     mozreview = 'mozreview'
     bmo = 'bmo'
     no_bug = 'no_bug'
+    review_unneeded = 'review_unneeded'
     unknown = 'unknown'
     not_applicable = 'not_applicable'
 
@@ -164,6 +167,13 @@ def has_no_bug_marker(summary: str) -> bool:
     return bool(re.search(NOBUG_RE, summary))
 
 
+def has_uplift_markers(summary: str) -> bool:
+    """Is the commit flagged as an uplift with a=...?"""
+    uplift_flags = re.search(r'\ba=\w+\b', summary)
+    log.debug(f'matching uplift flags: {uplift_flags}')
+    return bool(uplift_flags)
+
+
 def has_wpt_uplift_markers(commit_author: str, summary: str) -> bool:
     """Was this commit by the Web Platform Test Sync Bot?
 
@@ -202,21 +212,23 @@ def determine_review_system(revision_json):
     author = revision_json['user']
 
     # 0. Check for changesets that don't need review.
-    if has_backout_markers(summary) or has_merge_markers(revision_json):
-        log.info(
-            f'no review system for changeset {changeset}: changeset is a back-out or merge commit'
-        )
+    if has_backout_markers(summary):
+        log.info(f'changeset {changeset}: changeset is a back-out commit')
+        return ReviewSystem.review_unneeded
+    elif has_merge_markers(revision_json):
+        log.info(f'changeset {changeset}: is a merge commit')
         return ReviewSystem.not_applicable
     elif has_no_bug_marker(summary):
         log.info(f'changeset {changeset}: summary is marked "no bug"')
         return ReviewSystem.no_bug
+    elif has_uplift_markers(summary):
+        log.info(f'changeset {changeset}: summary is marked uplift')
+        return ReviewSystem.review_unneeded
     elif has_wpt_uplift_markers(author, summary):
-        # This commit was requested by a bot account that vendors an external
-        # project into the tree.  We can ignore it.
         log.info(
             f'changeset {changeset}: changeset was requested by moz-wptsync-bot'
         )
-        return ReviewSystem.not_applicable
+        return ReviewSystem.review_unneeded
 
     # 1. Check for Phabricator because it's easiest.
     # TODO can we rely on BMO attachments for this?
