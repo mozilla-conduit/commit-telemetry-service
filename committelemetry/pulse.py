@@ -10,6 +10,7 @@ import logging
 import socket
 from contextlib import closing
 from functools import partial
+from typing import List
 
 from kombu import Connection, Exchange, Queue
 
@@ -25,7 +26,7 @@ def noop(*args, **kwargs):
     return None
 
 
-def changesets_for_pushid(pushid, push_json_url):
+def changesets_for_pushid(pushid: int, push_json_url: str) -> List[str]:
     """Return a list of changeset IDs in a repository push.
 
     Reads data published by the Mozilla hgweb pushlog extension.
@@ -104,8 +105,15 @@ def process_push_message(body, message, no_send=False):
     for changeset in changesets_for_pushid(
         pushdata['pushid'], pushdata['push_json_url']
     ):
-        log.info(f'processing changeset {changeset}')
-        sentry.extra_context({'changeset': changeset})
+        changeset_url = f'{repo_url}/rev/{changeset}'
+        log.info(f'processing changeset {changeset}: {changeset_url}')
+        sentry.extra_context(
+            {
+                'changeset': changeset,
+                'changeset URL': changeset_url
+            }
+        )
+
         ping = payload_for_changeset(changeset, repo_url)
 
         if no_send:
