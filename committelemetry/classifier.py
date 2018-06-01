@@ -237,7 +237,7 @@ def determine_review_system(revision_json):
     except IndexError:
         msg = f'could not determine review system for changeset {changeset}: unable to find a bug id in the changeset summary'
         log.info(msg)
-        sentry.captureMessage(msg)
+        sentry.captureMessage(msg, level=logging.INFO)
         return ReviewSystem.unknown
 
     try:
@@ -251,7 +251,7 @@ def determine_review_system(revision_json):
     except requests.exceptions.HTTPError as err:
         msg = f'could not determine review system for changeset {changeset} with bug {bug_id}: {err}'
         log.info(msg)
-        sentry.captureMessage(msg)
+        sentry.captureMessage(msg, level=logging.INFO)
         return ReviewSystem.unknown
 
     # 2. Check BMO for MozReview review markers because that's next-easiest.
@@ -264,7 +264,7 @@ def determine_review_system(revision_json):
 
     msg = f'could not determine review system for changeset {changeset} with bug {bug_id}: the changeset is missing all known review system markers'
     log.info(msg)
-    sentry.captureMessage(msg)
+    sentry.captureMessage(msg, level=logging.INFO)
     return ReviewSystem.unknown
 
 
