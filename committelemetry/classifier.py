@@ -34,6 +34,9 @@ BACKOUT_RE = re.compile(r'^back(ed|ing|) out ', re.IGNORECASE)
 # Match 'no bug' anywhere in the commit message summary
 NOBUG_RE = re.compile(r'\bno bug\b', re.IGNORECASE)
 
+# Match 'a=foo,bar' flags in the commit message summary
+UPLIFT_RE = re.compile(r'\ba=\w+\b', re.IGNORECASE)
+
 # Match '[wpt PR 1234] - summary a=testonly'
 WPT_SYNC_BOT_RE = re.compile(r'\[wpt PR \d+\](.*) a=testonly')
 
@@ -169,7 +172,7 @@ def has_no_bug_marker(summary: str) -> bool:
 
 def has_uplift_markers(summary: str) -> bool:
     """Is the commit flagged as an uplift with a=...?"""
-    uplift_flags = re.search(r'\ba=\w+\b', summary)
+    uplift_flags = re.search(UPLIFT_RE, summary)
     log.debug(f'matching uplift flags: {uplift_flags}')
     return bool(uplift_flags)
 
