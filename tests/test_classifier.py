@@ -6,24 +6,6 @@ import pytest
 pytestmark = pytest.mark.usefixtures('null_config')
 
 
-@pytest.fixture
-def null_config(monkeypatch):
-    """Set all of our environment configuration to harmless values."""
-    keys = [
-        'TARGET_REPO',
-        'PULSE_USERNAME',
-        'PULSE_PASSWORD',
-        'PUSH_NOTIFICATION_TOPIC',
-        'PULSE_QUEUE_NAME',
-        'PULSE_QUEUE_ROUTING_KEY',
-        'TMO_PING_NAMESPACE',
-        'TMO_PING_DOCTYPE',
-        'TMO_PING_DOCVERSION',
-    ]
-    for k in keys:
-        monkeypatch.setenv(k, 'x')
-
-
 @pytest.mark.parametrize(
     "test_input,expected", [
         ("no bug - foo",                True),
