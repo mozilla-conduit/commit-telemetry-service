@@ -9,7 +9,8 @@ import click
 
 from committelemetry.pulse import run_pulse_listener
 from committelemetry.pushlog import send_pings_by_pushid
-from .telemetry import NoSuchChangeset, payload_for_changeset
+from .telemetry import payload_for_changeset
+from committelemetry.hgmo import NoSuchChangeset
 
 
 @click.command()

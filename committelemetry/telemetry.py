@@ -12,7 +12,7 @@ import requests
 
 from committelemetry import config
 from committelemetry.classifier import determine_review_system
-from committelemetry.http import requests_retry_session
+from committelemetry.hgmo import fetch_changeset, utc_hgwebdate
 
 log = logging.getLogger(__name__)
 
@@ -49,18 +49,6 @@ def payload_for_changeset(changesetid: str, repo_url: str) -> Dict:
     }
 
 
-def fetch_changeset(changeset_id, repo_url):
-    # Example URL: https://hg.mozilla.org/mozilla-central/json-rev/deafa2891c61
-    response = requests_retry_session(
-    ).get(f'{repo_url}/json-rev/{changesetid}')
-    if response.status_code == 404:
-        raise NoSuchChangeset(
-            f'The changeset {changesetid} does not exist in repository {repo_url}'
-        )
-    response.raise_for_status()
-    return response.json()
-
-
 def send_ping(ping_id, payload):
     """Send an event ping to the Mozilla telemetry service.
 
@@ -87,31 +75,3 @@ def send_ping(ping_id, payload):
     response.raise_for_status()
 
 
-def utc_hgwebdate(hgweb_datejson):
-    """Turn a (unixtime, offset) tuple back into a UTC Unix timestamp.
-
-    Pushlog entries are not in UTC, but a tuple of (local-unixtime, utc-offset)
-    created by
-    https://www.mercurial-scm.org/repo/hg/file/8b86acc7aa64/mercurial/utils/dateutil.py#l63.
-    This function reverses the operation that created the tuple.
-
-    Args:
-        hgweb_datejson: A 2-element JSON list of ints.
-            For example: https://hg.mozilla.org/mozilla-central/json-rev/deafa2891c61
-            See https://www.mercurial-scm.org/repo/hg/file/8b86acc7aa64/mercurial/utils/dateutil.py#l63
-            for how this value is created.
-
-    Returns:
-        The UTC Unix time (seconds since the epoch), as an int.
-    """
-    assert len(hgweb_datejson) == 2
-    timestamp, offset = hgweb_datejson
-    return timestamp + offset
-
-
-class Error(Exception):
-    """Generic error class for this module."""
-
-
-class NoSuchChangeset(Error):
-    """Raised if the given changeset ID does not exist in the target system."""

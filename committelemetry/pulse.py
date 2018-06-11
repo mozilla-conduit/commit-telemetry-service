@@ -10,12 +10,11 @@ import logging
 import socket
 from contextlib import closing
 from functools import partial
-from typing import List
 
 from kombu import Connection, Exchange, Queue
 
 from committelemetry import config
-from committelemetry.http import requests_retry_session
+from committelemetry.hgmo import changesets_for_pushid
 from committelemetry.telemetry import payload_for_changeset, send_ping
 from committelemetry.sentry import client as sentry
 
@@ -24,34 +23,6 @@ log = logging.getLogger(__name__)
 
 def noop(*args, **kwargs):
     return None
-
-
-def changesets_for_pushid(pushid: int, push_json_url: str) -> List[str]:
-    """Return a list of changeset IDs in a repository push.
-
-    Reads data published by the Mozilla hgweb pushlog extension.
-
-    Also see https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/pushlog.html#writing-agents-that-consume-pushlog-data
-
-    Args:
-        pushid: The integer pushlog pushid we want information about.
-        push_json_url: The 'push_json_url' field from a hgpush message.
-            See https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/notifications.html#changegroup-1
-            The pushid in the URL should match the pushid argument to this
-            function.
-
-    Returns:
-        A list of changeset ID strings (40 char hex strings).
-    """
-    log.info(f'processing pushid {pushid}')
-    sentry.extra_context({'pushid': pushid})
-    response = requests_retry_session().get(push_json_url)
-    response.raise_for_status()
-
-    # See https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/pushlog.html#version-2
-    changesets = response.json()['pushes'][str(pushid)]['changesets']
-    log.info(f'got {len(changesets)} changesets for pushid {pushid}')
-    return changesets
 
 
 def process_push_message(body, message, no_send=False):
