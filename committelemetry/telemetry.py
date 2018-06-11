@@ -6,6 +6,7 @@ Functions for building and sending telemetry.mozilla.org pings.
 """
 
 import logging
+from typing import Dict
 
 import requests
 
@@ -16,7 +17,7 @@ from committelemetry.http import requests_retry_session
 log = logging.getLogger(__name__)
 
 
-def payload_for_changeset(changesetid, repo_url):
+def payload_for_changeset(changesetid: str, repo_url: str) -> Dict:
     """Build a telemetry.mozilla.org ping payload for the given changeset ID.
 
     The payload conforms to https://github.com/mozilla-services/mozilla-pipeline-schemas/blob/dev/schemas/eng-workflow/hgpush/hgpush.1.schema.json
@@ -33,28 +34,31 @@ def payload_for_changeset(changesetid, repo_url):
         NoSuchChangeset: the requested changeset ID does not exist in the given
         mercurial repository.
     """
+    changeset = fetch_changeset(changesetid, repo_url)
+
+    reviewsystem = determine_review_system(changeset)
+    landingsystem = changeset.get('landingsystem')
+    utc_pushdate = utc_hgwebdate(changeset['pushdate'])
+
+    return {
+        'changesetID': changesetid,
+        'landingSystem': landingsystem,
+        'reviewSystemUsed': reviewsystem.value,
+        'repository': repo_url,
+        'pushDate': utc_pushdate,
+    }
+
+
+def fetch_changeset(changeset_id, repo_url):
     # Example URL: https://hg.mozilla.org/mozilla-central/json-rev/deafa2891c61
     response = requests_retry_session(
     ).get(f'{repo_url}/json-rev/{changesetid}')
-
     if response.status_code == 404:
         raise NoSuchChangeset(
             f'The changeset {changesetid} does not exist in repository {repo_url}'
         )
-
     response.raise_for_status()
-    pushdata = response.json()
-
-    system = determine_review_system(pushdata)
-
-    utc_pushdate = utc_hgwebdate(pushdata['pushdate'])
-
-    return {
-        'changesetID': changesetid,
-        'reviewSystemUsed': system.value,
-        'repository': repo_url,
-        'pushDate': utc_pushdate
-    }
+    return response.json()
 
 
 def send_ping(ping_id, payload):
