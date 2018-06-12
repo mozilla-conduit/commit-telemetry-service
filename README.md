@@ -102,7 +102,7 @@ $ pip install -r requirements.txt -r dev-requirements.txt
 
 ### Hacking
 
-Code formatting is done with [yapf](https://github.com/google/yapf).
+Code formatting is done with [black](https://github.com/ambv/black).
 
 `requirements.txt` and `dev-requirements.txt` are updated using [hashin](https://github.com/peterbe/hashin).
 
