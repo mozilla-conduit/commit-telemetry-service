@@ -10,10 +10,7 @@ from urllib3 import Retry
 
 
 def requests_retry_session(
-    retries=3,
-    backoff_factor=0.3,
-    status_forcelist=(500, 502, 504),
-    session=None
+    retries=3, backoff_factor=0.3, status_forcelist=(500, 502, 504), session=None
 ):
     """Return a python-requests Session that retries on HTTP failure.
 

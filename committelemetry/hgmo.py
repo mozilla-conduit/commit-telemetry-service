@@ -43,11 +43,10 @@ def changesets_for_pushid(pushid: int, push_json_url: str) -> List[str]:
 
 def fetch_changeset(changeset_id, repo_url):
     # Example URL: https://hg.mozilla.org/mozilla-central/json-rev/deafa2891c61
-    response = requests_retry_session(
-    ).get(f'{repo_url}/json-rev/{changesetid}')
+    response = requests_retry_session().get(f'{repo_url}/json-rev/{changesetid}')
     if response.status_code == 404:
         raise NoSuchChangeset(
-            f'The changeset {changesetid} does not exist in repository {repo_url}'  # yapf:disable
+            f'The changeset {changesetid} does not exist in repository {repo_url}'
         )
     response.raise_for_status()
     return response.json()

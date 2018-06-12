@@ -78,12 +78,7 @@ def process_push_message(body, message, no_send=False):
     ):
         changeset_url = f'{repo_url}/rev/{changeset}'
         log.info(f'processing changeset {changeset}: {changeset_url}')
-        sentry.extra_context(
-            {
-                'changeset': changeset,
-                'changeset URL': changeset_url
-            }
-        )
+        sentry.extra_context({'changeset': changeset, 'changeset URL': changeset_url})
 
         ping = payload_for_changeset(changeset, repo_url)
 
@@ -115,9 +110,7 @@ def run_pulse_listener(username, password, timeout, no_send):
     )  # Retries must be >=1 or it will retry forever.
 
     with closing(connection):
-        hgpush_exchange = Exchange(
-            config.PULSE_EXCHANGE, 'topic', channel=connection
-        )
+        hgpush_exchange = Exchange(config.PULSE_EXCHANGE, 'topic', channel=connection)
 
         # Pulse queue names need to be prefixed with the username
         queue_name = f'queue/{username}/{config.PULSE_QUEUE_NAME}'

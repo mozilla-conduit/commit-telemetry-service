@@ -18,14 +18,14 @@ from committelemetry.hgmo import NoSuchChangeset
     '--debug',
     envvar='DEBUG',
     is_flag=True,
-    help='Print debugging messages about the script\'s progress.'
+    help='Print debugging messages about the script\'s progress.',
 )
 @click.option(
     '--target-repo',
     envvar='TARGET_REPO',
     metavar='URL',
     default='https://hg.mozilla.org/mozilla-central/',
-    help='The URL of the repository where the given changeset can be found.'
+    help='The URL of the repository where the given changeset can be found.',
 )
 @click.argument('node_id')
 def dump_telemetry(debug, target_repo, node_id):
@@ -37,43 +37,40 @@ def dump_telemetry(debug, target_repo, node_id):
     try:
         ping = payload_for_changeset(node_id, target_repo)
     except NoSuchChangeset:
-        print(
-            f'Error: changeset {node_id} does not exist in repository {target_repo}'
-        )
+        print(f'Error: changeset {node_id} does not exist in repository {target_repo}')
         sys.exit(1)
 
     pprint.pprint(ping)
 
 
+# fmt: off
 @click.command()
 @click.option(
     '--debug',
     envvar='DEBUG',
     is_flag=True,
-    help='Print debugging messages about the script\'s progress.'
+    help='Print debugging messages about the script\'s progress.',
 )
 @click.option(
-    '--user',
-    envvar='PULSE_USERNAME',
-    help='The Pulse queue username to connect with.'
+    '--user', envvar='PULSE_USERNAME', help='The Pulse queue username to connect with.'
 )
 @click.option(
     '--password',
     prompt=True,
     hide_input=True,
     envvar='PULSE_PASSWORD',
-    help='The Pulse queue user\'s password.'
+    help='The Pulse queue user\'s password.',
 )
 @click.option(
     '--timeout',
     default=1.0,
-    help='Timeout, in seconds, to wait for additional queue messages.'
+    help='Timeout, in seconds, to wait for additional queue messages.',
 )
 @click.option(
     '--no-send',
     is_flag=True,
-    help='For testing. Do not send ping data or drain any queues.'
-)
+    help='For testing. Do not send ping data or drain any queues.',
+)  # fmt: on
 def process_queue_messages(debug, user, password, timeout, no_send):
     """Process all queued mercurial repo change messages."""
     # Importing the Sentry client will automatically configure it and install
@@ -94,19 +91,17 @@ def process_queue_messages(debug, user, password, timeout, no_send):
     '--debug',
     envvar='DEBUG',
     is_flag=True,
-    help='Print debugging messages about the script\'s progress.'
+    help='Print debugging messages about the script\'s progress.',
 )
 @click.option(
     '--no-send',
     is_flag=True,
-    help='For testing. Do not send ping data or drain any queues.'
+    help='For testing. Do not send ping data or drain any queues.',
 )
 @click.argument('repo_url')
 @click.argument('starting_push_id')
 @click.argument('ending_push_id')
-def backfill_pushlog(
-    debug, no_send, repo_url, starting_push_id, ending_push_id
-):
+def backfill_pushlog(debug, no_send, repo_url, starting_push_id, ending_push_id):
     """Process repo pushes by pushlog ID."""
     if debug:
         log_level = logging.DEBUG

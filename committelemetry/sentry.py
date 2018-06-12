@@ -13,5 +13,5 @@ client = Client(
     include_paths=[__name__.split('.', 1)[0]],
     # The release name should come from the HEROKU_SLUG_COMMIT environment var.
     # release=fetch_git_sha(os.path.dirname(__file__)),
-    processors=('raven.processors.SanitizePasswordsProcessor', ),
+    processors=('raven.processors.SanitizePasswordsProcessor',),
 )

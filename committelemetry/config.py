@@ -15,7 +15,9 @@ PULSE_QUEUE_ROUTING_KEY = os.environ['PULSE_QUEUE_ROUTING_KEY']
 
 # For sending pings to the generic ping ingestion service.
 # See https://docs.google.com/document/d/1PqiF1rF2fCk_kQuGSwGwildDf4Crg9MJTY44E6N5DSk
-TMO_BASE_URL = os.environ.get('TMO_BASE_URL', 'http://incoming.telemetry.mozilla.org/submit')
+TMO_BASE_URL = os.environ.get(
+    'TMO_BASE_URL', 'http://incoming.telemetry.mozilla.org/submit'
+)
 TMO_PING_NAMESPACE = os.environ['TMO_PING_NAMESPACE']
 TMO_PING_DOCTYPE = os.environ['TMO_PING_DOCTYPE']
 TMO_PING_DOCVERSION = os.environ['TMO_PING_DOCVERSION']

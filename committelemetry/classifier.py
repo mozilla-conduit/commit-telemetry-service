@@ -24,9 +24,7 @@ ATTACHMENT_TYPE_GITHUB = 'text/x-github-request'
 ATTACHMENT_TYPE_PHABRICATOR = 'text/x-phabricator-request'
 
 # Match "Differential Revision: https://phabricator.services.mozilla.com/D861"
-PHABRICATOR_COMMIT_RE = re.compile(
-    r'Differential Revision: ([\w:/.]*)(D[0-9]{3,})'
-)
+PHABRICATOR_COMMIT_RE = re.compile(r'Differential Revision: ([\w:/.]*)(D[0-9]{3,})')
 
 # Match "Backed out 4 changesets (bug 1448077) for xpcshell failures at..."
 BACKOUT_RE = re.compile(r'^back(ed|ing|) out ', re.IGNORECASE)
@@ -59,6 +57,7 @@ class ReviewSystem(Enum):
             that we know of to determine how (or if) the commit was reviewed.
         not_applicable: Indicates the commit was a merge, etc.
     """
+
     phabricator = 'phabricator'
     mozreview = 'mozreview'
     bmo = 'bmo'
@@ -71,12 +70,10 @@ class ReviewSystem(Enum):
 def is_patch(attachment):
     """Is the given BMO attachment JSON for a patch attachment?"""
     # Example: https://bugzilla.mozilla.org/rest/bug/1447193/attachment?exclude_fields=data
-    return (
-        attachment['is_patch'] == 1 or attachment['content_type'] in (
-            ATTACHMENT_TYPE_MOZREVIEW,
-            ATTACHMENT_TYPE_GITHUB,
-            ATTACHMENT_TYPE_PHABRICATOR,
-        )
+    return attachment['is_patch'] == 1 or attachment['content_type'] in (
+        ATTACHMENT_TYPE_MOZREVIEW,
+        ATTACHMENT_TYPE_GITHUB,
+        ATTACHMENT_TYPE_PHABRICATOR,
     )
 
 
@@ -183,8 +180,9 @@ def has_wpt_uplift_markers(commit_author: str, summary: str) -> bool:
     See https://hg.mozilla.org/mozilla-central/rev/e2dced9fda47999677b840a58f5e39b2217881e8
     for an example commit.
     """
-    return bool(re.search(WPT_SYNC_BOT_RE, summary)) \
-           or (commit_author == "moz-wptsync-bot <wptsync@mozilla.com>")
+    return bool(re.search(WPT_SYNC_BOT_RE, summary)) or (
+        commit_author == "moz-wptsync-bot <wptsync@mozilla.com>"
+    )
 
 
 def split_summary(s: str) -> str:
@@ -228,9 +226,7 @@ def determine_review_system(revision_json):
         log.info(f'changeset {changeset}: summary is marked uplift')
         return ReviewSystem.review_unneeded
     elif has_wpt_uplift_markers(author, summary):
-        log.info(
-            f'changeset {changeset}: changeset was requested by moz-wptsync-bot'
-        )
+        log.info(f'changeset {changeset}: changeset was requested by moz-wptsync-bot')
         return ReviewSystem.review_unneeded
 
     # 1. Check for Phabricator because it's easiest.

@@ -7,60 +7,63 @@ pytestmark = pytest.mark.usefixtures('null_config')
 
 
 @pytest.mark.parametrize(
-    "test_input,expected", [
-        ("no bug - foo",                True),
-        ("bar baz - No bug, blah",      True),
-        ("bar baz - NO BUG",            True),
-        ("Bug 1234 - blah blah",        False),
-        ("Bug 1234 - No blah for bug",  False),
-    ]
-) # yapf: disable
+    "test_input,expected",
+    [
+        ("no bug - foo", True),
+        ("bar baz - No bug, blah", True),
+        ("bar baz - NO BUG", True),
+        ("Bug 1234 - blah blah", False),
+        ("Bug 1234 - No blah for bug", False),
+    ],
+)
 def test_nobug_marker(test_input, expected):
     from committelemetry.classifier import has_no_bug_marker
+
     assert has_no_bug_marker(test_input) == expected
 
 
 @pytest.mark.parametrize(
-    "test_input,expected", [
-        ("foo",             "foo"),
-        ("foo\nbar\nbaz",   "foo"),
-    ]
-) # yapf: disable
+    "test_input,expected", [("foo", "foo"), ("foo\nbar\nbaz", "foo")]
+)
 def test_summary_splitting(test_input, expected):
     from committelemetry.classifier import split_summary
+
     assert split_summary(test_input) == expected
 
 
 @pytest.mark.parametrize(
-    "test_input,expected", [
+    "test_input,expected",
+    [
         ("Bug 123 - [wpt PR 123] foo bar a=testonly", True),
         ("Bug 123 - [wpt PR 123] foo bar a=testonly extra", True),
-        ("Bug 123 - [wpt PR 123]",          False),
-        ("Bug 123 - foo bar a=testonly",    False),
-    ]
-) # yapf: disable
+        ("Bug 123 - [wpt PR 123]", False),
+        ("Bug 123 - foo bar a=testonly", False),
+    ],
+)
 def test_has_wpt_uplift_markers_in_summary(test_input, expected):
     from committelemetry.classifier import has_wpt_uplift_markers
+
     assert has_wpt_uplift_markers('', test_input) == expected
 
 
 def test_has_wpt_uplift_markers_if_syncbot_is_author():
     from committelemetry.classifier import has_wpt_uplift_markers
-    assert has_wpt_uplift_markers(
-        "moz-wptsync-bot <wptsync@mozilla.com>", "summary"
-    )
+
+    assert has_wpt_uplift_markers("moz-wptsync-bot <wptsync@mozilla.com>", "summary")
     assert not has_wpt_uplift_markers("someone <anon@mozilla.com>", "summary")
 
 
 @pytest.mark.parametrize(
-    "test_input,expected", [
+    "test_input,expected",
+    [
         ("Bug 123 - foo bar a=testonly", True),
         ("Bug 123 - foo bar a=testonly extra", True),
         ("Bug 123 - foo bar a=multiple,somethings r=me", True),
         ("Bug 123 - foo bar a=merge", True),
         ("Bug 123 - r=testonly", False),
-    ]
-) # yapf: disable
+    ],
+)
 def test_has_uplift_markers(test_input, expected):
     from committelemetry.classifier import has_uplift_markers
+
     assert has_uplift_markers(test_input) == expected

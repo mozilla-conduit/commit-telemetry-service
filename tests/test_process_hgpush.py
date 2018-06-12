@@ -29,17 +29,17 @@ test_message = {
                     'user': 'someuser@mozilla.org',
                 }
             ],
-            'heads': [
-                'ebe99842f5f8d543e5453ce78b1eae3641830b13',
-            ],
+            'heads': ['ebe99842f5f8d543e5453ce78b1eae3641830b13'],
             'repo_url': 'https://hg.mozilla.org/integration/autoland',
         },
-    },
-}   # yapf: disable
+    }
+}
+
 
 def test_process_push_message():
     from committelemetry.pulse import process_push_message
 
+    # fmt: off
     with patch('committelemetry.pulse.send_ping') as send_ping, \
          patch('committelemetry.pulse.payload_for_changeset'), \
          patch('committelemetry.pulse.changesets_for_pushid') as changesets_for_pushid:
@@ -48,5 +48,4 @@ def test_process_push_message():
         process_push_message(test_message, MagicMock())
 
         send_ping.assert_called_once()
-
-
+    # fmt: on

@@ -29,9 +29,7 @@ def pushes_for_range(repo_url, starting_push_id, ending_push_id):
     """
     # See https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/pushlog.html#version-2
     params = dict(startID=starting_push_id, endID=ending_push_id, version=2)
-    response = requests_retry_session().get(
-        f'{repo_url}/json-pushes/', params=params
-    )
+    response = requests_retry_session().get(f'{repo_url}/json-pushes/', params=params)
     response.raise_for_status()
     pushlog = response.json()
     return pushlog['pushes']

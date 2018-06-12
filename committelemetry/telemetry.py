@@ -73,5 +73,3 @@ def send_ping(ping_id, payload):
 
     response = requests.put(url, json=payload)
     response.raise_for_status()
-
-
