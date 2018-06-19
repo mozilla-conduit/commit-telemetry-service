@@ -5,7 +5,7 @@
 Functions for interacting with hg.mozilla.org APIs.
 """
 import logging
-from typing import List
+from typing import Dict, List
 
 from committelemetry.http import requests_retry_session
 from committelemetry.sentry import client as sentry
@@ -41,7 +41,13 @@ def changesets_for_pushid(pushid: int, push_json_url: str) -> List[str]:
     return changesets
 
 
-def fetch_changeset(changeset_id, repo_url):
+def fetch_changeset(changesetid: str, repo_url: str) -> Dict:
+    """Fetch changeset JSON from hg.mozilla.org.
+
+    Raises:
+        NoSuchChangeset if the changeset does not exist on hg.mozilla.org.
+        requests.HTTPError for all other problems.
+    """
     # Example URL: https://hg.mozilla.org/mozilla-central/json-rev/deafa2891c61
     response = requests_retry_session().get(f'{repo_url}/json-rev/{changesetid}')
     if response.status_code == 404:
