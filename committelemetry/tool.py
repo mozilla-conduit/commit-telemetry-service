@@ -1,8 +1,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import json
 import logging
-import pprint
 import sys
 
 import click
@@ -40,7 +40,7 @@ def dump_telemetry(debug, target_repo, node_id):
         print(f'Error: changeset {node_id} does not exist in repository {target_repo}')
         sys.exit(1)
 
-    pprint.pprint(ping)
+    print(json.dumps(ping, indent=4, sort_keys=True))
 
 
 # fmt: off
