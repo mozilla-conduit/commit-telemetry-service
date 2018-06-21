@@ -246,9 +246,13 @@ def determine_review_system(revision_json):
         bug_id = parse_bugs(summary)[0]
         log.debug(f'changeset {changeset}: parsed bug ID {bug_id}')
     except IndexError:
-        msg = f'could not determine review system for changeset {changeset}: unable to find a bug id in the changeset summary'
-        log.info(msg)
-        sentry.captureMessage(msg, level=logging.INFO)
+        log.info(
+            f'could not determine review system for changeset {changeset}: unable to '
+            f'find a bug id in the changeset summary'
+        )
+        sentry.captureMessage(
+            "could not determine review system for changeset", level=logging.INFO
+        )
         return ReviewSystem.unknown
 
     try:
@@ -260,9 +264,13 @@ def determine_review_system(revision_json):
         # bugs in with commits that have a 'no bug - do stuff' summary line.
         return ReviewSystem.no_bug
     except requests.exceptions.HTTPError as err:
-        msg = f'could not determine review system for changeset {changeset} with bug {bug_id}: {err}'
-        log.info(msg)
-        sentry.captureMessage(msg, level=logging.INFO)
+        log.info(
+            f'could not determine review system for changeset {changeset} with bug '
+            f'{bug_id}: {err}'
+        )
+        sentry.captureMessage(
+            "could not determine review system for changeset", level=logging.INFO
+        )
         return ReviewSystem.unknown
 
     # 2. Check BMO for MozReview review markers because that's next-easiest.
@@ -273,9 +281,13 @@ def determine_review_system(revision_json):
     if has_bmo_patch_review_markers(attachments, bug_history):
         return ReviewSystem.bmo
 
-    msg = f'could not determine review system for changeset {changeset} with bug {bug_id}: the changeset is missing all known review system markers'
-    log.info(msg)
-    sentry.captureMessage(msg, level=logging.INFO)
+    log.info(
+        f'could not determine review system for changeset {changeset} with bug '
+        f'{bug_id}: the changeset is missing all known review system markers'
+    )
+    sentry.captureMessage(
+        "could not determine review system for changeset", level=logging.INFO
+    )
     return ReviewSystem.unknown
 
 
