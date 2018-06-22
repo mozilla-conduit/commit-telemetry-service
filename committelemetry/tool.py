@@ -8,7 +8,7 @@ import sys
 import click
 
 from committelemetry.pulse import run_pulse_listener
-from committelemetry.pushlog import send_pings_by_pushid
+from committelemetry.pushlog import send_pings_by_pushid, pushes_for_range
 from .telemetry import payload_for_changeset
 from committelemetry.hgmo import NoSuchChangeset
 
@@ -112,6 +112,12 @@ def backfill_pushlog(debug, no_send, repo_url, starting_push_id, ending_push_id)
 
     print(f'Checking repo {repo_url}')
     print(f'Fetching pushes {starting_push_id} to {ending_push_id}')
+
+    pushes = pushes_for_range(repo_url, starting_push_id, ending_push_id)
+
+    print()
+    print(f'This will re-send data for {len(pushes)} pushes.')
+    click.confirm('Proceed?', abort=True)
 
     send_pings_by_pushid(repo_url, starting_push_id, ending_push_id, no_send)
 
