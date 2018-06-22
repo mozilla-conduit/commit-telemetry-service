@@ -118,13 +118,25 @@ Make sure you match the schema or your pings will be dropped!
 
 ### Testing
 
+#### Automated tests
+
+The unit test suite can be run with [py.test](https://docs.pytest.org/en/latest/).
+
+#### Manual tests
+
 Manual testing can be done with:
+
+```console
+$ PYTHONPATH=. bin/dump-telemetry --debug  <SOME_CHANGESET_SHA>
+```
+
+and
 
 ```console
 $ PYTHONPATH=. bin/process-queue-messages --no-send --debug
 ```
 
-If you need a message queue with a lot of traffic for testing, you may want to
+If you need a message queue with a lot of traffic for testing you may want to
 listen for messages on `integration/mozilla-inbound`.  To switch the message 
 queue set the following environment variables:
 
@@ -133,6 +145,15 @@ PULSE_QUEUE_NAME=hgpush-inbound-test-queue
 PULSE_QUEUE_ROUTING_KEY=integration/mozilla-inbound
 ```
 
-You can view TMO [live ping data ingestion and ping ingestion errors](https://pipeline-cep.prod.mozaws.net/dashboard_output/) using [CEP dashboards](https://docs.telemetry.mozilla.org/cookbooks/view_pings_cep.html).
+#### Testing ping schema changes
+
+After deploying a schema change check these monitors:
+
+* [Graph of all pings for the last 8 days (successes and failures)](https://pipeline-cep.prod.mozaws.net/dashboard_output/graphs/analysis.moz_generic_error_monitor.eng_workflow.html)
+* [List of the last 10 ingested pings (both successful and rejected)](https://pipeline-cep.prod.mozaws.net/dashboard_output/analysis.moz_generic_eng_workflow_hgpush_1_pings.submissions.json)
+* [Reason for the last 10 ping rejections](https://pipeline-cep.prod.mozaws.net/dashboard_output/analysis.moz_generic_eng_workflow_hgpush_1_pings.errors.txt)
+
+You can also write custom monitors using hand-crafted [CEP dashboards](https://docs.telemetry.mozilla.org/cookbooks/view_pings_cep.html).
+
 Ask in `#datapipeline` on IRC if you need help with this.
 
