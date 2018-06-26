@@ -1,0 +1,11 @@
+# HG changeset patch
+# User Māris Fogels <mars@mozilla.com>
+# Date 1530131605 14400
+#      Wed Jun 27 16:33:25 2018 -0400
+# Node ID f16d904d2d6ee49bc7fcf57ce6d0a59e80448ad7
+# Parent  62a578a28fe94efb7f03138bbfaa458d1c31314e
+Rename file
+
+diff --git a/hello.txt b/hello-world.txt
+rename from hello.txt
+rename to hello-world.txt

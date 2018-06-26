@@ -1,0 +1,39 @@
+# HG changeset patch
+# User Māris Fogels <mars@mozilla.com>
+# Date 1530120920 14400
+#      Wed Jun 27 13:35:20 2018 -0400
+# Node ID 62a578a28fe94efb7f03138bbfaa458d1c31314e
+# Parent  3659a2ff799f0a531283d22d112b08eb23a9ced7
+Binary fun!
+
+diff --git a/browser/base/content/abouthome/addons.png b/browser/base/content/abouthome/addons.png
+index 41519ce4982a0385b7668eaad8c20e1d06070b7b..238a5f6daa3b6eab2e68307509f27796bf3437f6
+GIT binary patch
+literal 1369
+zc$@)Q1*ZCmP)<h;3K|Lk000e1NJLTq001BW001Be1^@s6b9#F8000FbNkl<ZcmdUy
+z1FS4r5Qf+BhA+<Aw(V=%nz<O;W{+*JZQC}ZwQX;0Rp-uJCg~)PlYHsZsILFi`D?m+
+zw_W0QVcYN(O?}gkc8<<}i+qmbCoXIox@fy3zocudeT1(7sfhu-JI+Gm!8sXR+%bB>
+zHWx6;m*20$q=D=;5GmfkLSvOJ1j9Tjv&{ua4DQFB(Go;UH#Q&<CSMvfHh*ZF3&@nO
+zHJUM5xNv<#KrnYL7(DT>-+24Iv$nYa0N6i}tUSu3u52s;Rpi>6@A3n{KHJ5JkxbR>
+zh!imS^(+>D8r-3D?^a82Zd2b;=QZ`8d|q?^$>%oppRnrqmdm=w$M_1%S2Sx{2ErcB
+z!;IMQ4W5%x%sE%|?zw#ZA@%zpEt~~(4)e18Qz97Q$zgC-0=<($=ow#P$2_Tt)*F1d
+z1mXO3EHtKL^9n0ai}vC56f-a*fnjXVp;;+(j__aMEPyXFKC5v?z#7c5<u&<IEHrjT
+zi{MLNiN?DILiuZ1Xzb5i1+G|$jWMsfp7wRFD98-1CpZgORNFpw$IEo%tpbVAI)c}6
+z79i9(e`b<32xhO@DwvoQ7+n!RcL7@Gza$`#xq7Q$@FYNE@fkS_5b0chGpQP_>sG<w
+zO@K&a3$M<BUD10%>!9QOmH{Pp&4FtKNKM|aJ&6iyHo}{%0(pWANLvy|$GJit;K@v%
+zU(z|+f(Zv&24-Fv;>loIq=WG#HFS*dzeYhvH3XPk;Rj4i65Qx&XQTi|Z{lwzUVJ83
+zz5YhrzF<Xndr2S(;Q-x7;|Rm7SP#=eEr|7Qwr#C}4BIhSap)RbxS=87!;e3`)E&+~
+zYV^cD@Wl%czxL+4Ismv3IUcz<kSslH59NSKRyjdpUC|=7B|(#-WA$@%425aFUHyN*
+zH*yZrjhv0_yLySDnW|dvj$v?hYk-1^^e6T=XOn7e{&AHpNa{I5%Rp7Lp&zIko_M)&
+z&JoUoSm*qFO_Fmi?-@X2WX@~q)1P%&_ZpW@3)CTvJw!L*1nVPD{IA;ew^gpY<?gKB
+z75SdZPKikr`NN+mlp6^yXc^%3O$uO2pn<UkCH;^8g6>^FQ72#AK0Jx;{iAMDE>JR8
+zIP)j~9DyAC`4?Z!`QwHAEKK4ZlPC60@yZ)30B}r0z~GGN9l41CGm|9cATxSdF+;Nw
+z*2OAo0H_me=wiZ&GjZW8-O=KvXmN(FV9K@1WBVYdBdr7pTT}iSvHovr5n3xMAC-w_
+zOb-<@A8l=c)H_Tp|2PvbJZ^BuzO1{OV%DRu_(5;?FL8ew%FVPsbi)l$-!jqs<IBp=
+zC4Tw!w^6Gv`DR_jdZ>ajy_3)VX{faRWe;Ylv>VVlBVcrelIvd6_Hg2#16E?w7!n{*
+znx)(Ys4PEN1LV@&26V0n`a$*D>g&&M>EALbP=Bd+M>ma;n;BSC7#-Z7hHBdfWI#tK
+zw*fjnCo#Z9Z9@a~>zn(g?iQ%+VDY6kjZvZpcoJQny8w;tRf8vn=F4ut7R-Ru=z)Q0
+z!EGxaE3)sj&M=+ZG)8R?0#B;Hjk5rW*6{$XHTj?pwHwXQ<V}EB=K`(Gm#JT`u`&<S
+zEa_amJy*xkpVpjM_Z(*dYO^=Lq_(mBPAIK@+Ww|@hCi@)V=q;%xj9b{ruy~2|Nh7M
+z`P%grJomE39{iHT)MIgs_`cvv_0Mn?001W<ymd?>-N+@#A?vQ+efeMRGGuU**nZ@4
+bF1h~)!f_YRDQWWV00000NkvXXu0mjf>0+AB

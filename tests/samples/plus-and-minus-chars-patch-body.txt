@@ -1,0 +1,16 @@
+
+diff --git a/text.rst b/text.rst
+new file mode 100644
+--- /dev/null
++++ b/text.rst
+@@ -0,0 +1,10 @@
+-More rst
+---------
+--- /foo
+-- /bar
+-
++Hello rst
+++++++++++
++++ /foo
+++ /bar
++

@@ -58,6 +58,24 @@ def fetch_changeset(changesetid: str, repo_url: str) -> Dict:
     return response.json()
 
 
+def fetch_raw_diff_for_changeset(changesetid: str, repo_url: str) -> str:
+    """Fetch changeset raw 'hg export' patch text from hg.mozilla.org.
+
+    Raises:
+        NoSuchChangeset if the changeset does not exist on hg.mozilla.org.
+        requests.HTTPError for all other problems.
+    """
+    # Example URL: https://hg.mozilla.org/mozilla-central/raw-rev/f0fe810b3d7863cdb
+    response = requests_retry_session().get(f'{repo_url}/raw-rev/{changesetid}')
+    if response.status_code == 404:
+        raise NoSuchChangeset(
+            f'The changeset {changesetid} does not exist in repository {repo_url}'
+        )
+    response.raise_for_status()
+    return response.text
+
+
+
 def utc_hgwebdate(hgweb_datejson):
     """Turn a (unixtime, offset) tuple back into a UTC Unix timestamp.
 

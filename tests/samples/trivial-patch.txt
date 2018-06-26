@@ -1,0 +1,14 @@
+# HG changeset patch
+# User Māris Fogels <mars@mozilla.com>
+# Date 1530120920 14400
+#      Wed Jun 27 13:35:20 2018 -0400
+# Node ID 62a578a28fe94efb7f03138bbfaa458d1c31314e
+# Parent  3659a2ff799f0a531283d22d112b08eb23a9ced7
+Fix capitalization
+
+diff --git a/hello.txt b/hello.txt
+--- a/hello.txt
++++ b/hello.txt
+@@ -1,1 +1,1 @@
+-hello world
++Hello World

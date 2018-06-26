@@ -1,0 +1,7 @@
+
+diff --git a/hello-world.txt b/hello-world.txt
+deleted file mode 100644
+--- a/hello-world.txt
++++ /dev/null
+@@ -1,1 +0,0 @@
+-Hello World
