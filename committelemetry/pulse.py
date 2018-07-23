@@ -11,6 +11,7 @@ import socket
 from contextlib import closing
 from functools import partial
 
+from datadog import statsd
 from kombu import Connection, Exchange, Queue
 
 from committelemetry import config
@@ -79,6 +80,7 @@ def process_push_message(body, message, no_send=False):
         changeset_url = f'{repo_url}/rev/{changeset}'
         log.info(f'processing changeset {changeset}: {changeset_url}')
         sentry.extra_context({'changeset': changeset, 'changeset URL': changeset_url})
+        statsd.increment('job.items')
 
         ping = payload_for_changeset(changeset, repo_url)
 
@@ -93,6 +95,7 @@ def process_push_message(body, message, no_send=False):
     ack()
 
 
+@statsd.timed('job.time')
 def run_pulse_listener(username, password, timeout, no_send):
     """Run a Pulse message queue listener."""
     connection = Connection(

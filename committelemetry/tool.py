@@ -6,9 +6,10 @@ import logging
 import sys
 
 import click
+from datadog import initialize
 
 from committelemetry.pulse import run_pulse_listener
-from committelemetry.pushlog import send_pings_by_pushid, pushes_for_range
+from committelemetry.pushlog import pushes_for_range, send_pings_by_pushid
 from .telemetry import payload_for_changeset
 from committelemetry.hgmo import NoSuchChangeset
 
@@ -82,6 +83,9 @@ def process_queue_messages(debug, user, password, timeout, no_send):
         log_level = logging.INFO
 
     logging.basicConfig(stream=sys.stdout, level=log_level)
+
+    # Initialize metrics collection
+    initialize(namespace='commit-telemetry')
 
     run_pulse_listener(user, password, timeout, no_send)
 
