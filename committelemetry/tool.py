@@ -6,7 +6,7 @@ import logging
 import sys
 
 import click
-from datadog import initialize
+from datadog import initialize, statsd
 
 from committelemetry.pulse import run_pulse_listener
 from committelemetry.pushlog import pushes_for_range, send_pings_by_pushid
@@ -85,7 +85,8 @@ def process_queue_messages(debug, user, password, timeout, no_send):
     logging.basicConfig(stream=sys.stdout, level=log_level)
 
     # Initialize metrics collection
-    initialize(namespace='commit-telemetry')
+    initialize()
+    statsd.namespace = 'commit_telemetry'
 
     run_pulse_listener(user, password, timeout, no_send)
 
