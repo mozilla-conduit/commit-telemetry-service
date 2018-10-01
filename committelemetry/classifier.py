@@ -113,9 +113,38 @@ def fetch_bug_history(bug_id):
     return history
 
 
-def has_phab_markers(revision_description):
+def collect_review_attachments(attachments):
+    """Collect review-related attachments from a BMO bug attachment list.
+
+    Only active attachments (attachments where "is_obsolete" == 0) are kept.
+
+    MozReview attachments are not returned because MozReview has been decommissioned.
+
+    Args:
+        attachments: A list of JSON attachment dict objects.
+
+    Returns:
+        A list of JSON attachment dictionaries for attachments related to code review
+        systems.
+    """
+    return [
+        a
+        for a in attachments
+        if a["is_obsolete"] == 0
+        and (
+            a["content_type"] in (ATTACHMENT_TYPE_GITHUB, ATTACHMENT_TYPE_PHABRICATOR)
+            or a["is_patch"] == 1
+        )
+    ]
+
+
+def has_phab_markers(attachments):
     """Does the given review description point to a Phabricator Revision?"""
-    return bool(re.search(PHABRICATOR_COMMIT_RE, revision_description))
+    patches = [a for a in attachments if is_patch(a)]
+    for patch_attachment in patches:
+        if patch_attachment['content_type'] == ATTACHMENT_TYPE_PHABRICATOR:
+            return True
+    return False
 
 
 def has_backout_markers(revision_description):
@@ -127,15 +156,6 @@ def has_merge_markers(revision_json):
     """Is the given revision a merge?"""
     # If the node has more than one parent then it's a merge.
     return len(revision_json['parents']) > 1
-
-
-def has_mozreview_markers(attachments):
-    """Is there an attachment pointing to a MozReview review request?"""
-    patches = [a for a in attachments if is_patch(a)]
-    for patch_attachment in patches:
-        if patch_attachment['content_type'] == ATTACHMENT_TYPE_MOZREVIEW:
-            return True
-    return False
 
 
 def has_bmo_patch_review_markers(attachments, bug_history):
@@ -212,7 +232,7 @@ def determine_review_system(revision_json):
     changeset = revision_json['node']
     author = revision_json['user']
 
-    # 0. Check for changesets that don't need review.
+    # Check for changesets that don't need review.
     if has_backout_markers(summary):
         log.info(f'changeset {changeset}: changeset is a back-out commit')
         return ReviewSystem.review_unneeded
@@ -228,11 +248,6 @@ def determine_review_system(revision_json):
     elif has_wpt_uplift_markers(author, summary):
         log.info(f'changeset {changeset}: changeset was requested by moz-wptsync-bot')
         return ReviewSystem.review_unneeded
-
-    # 1. Check for Phabricator because it's easiest.
-    # TODO can we rely on BMO attachments for this?
-    if has_phab_markers(fulldesc):
-        return ReviewSystem.phabricator
 
     # TODO handle multiple bugs?
     try:
@@ -273,12 +288,13 @@ def determine_review_system(revision_json):
         )
         return ReviewSystem.unknown
 
-    # 2. Check BMO for MozReview review markers because that's next-easiest.
-    if has_mozreview_markers(attachments):
-        return ReviewSystem.mozreview
+    review_attachments = collect_review_attachments(attachments)
 
-    # 3. Check for a review using just BMO attachments, e.g. splinter
-    if has_bmo_patch_review_markers(attachments, bug_history):
+    if has_phab_markers(review_attachments):
+        return ReviewSystem.phabricator
+
+    # Check for a review using just BMO attachments, e.g. splinter
+    if has_bmo_patch_review_markers(review_attachments, bug_history):
         return ReviewSystem.bmo
 
     log.info(
