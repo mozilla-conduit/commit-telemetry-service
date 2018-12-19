@@ -12,5 +12,9 @@ For help, run:
 """
 
 from committelemetry.tool import process_queue_messages
+import resource
+
+MEM_LIMIT = int(8e8)
+resource.setrlimit(resource.RLIMIT_AS, (MEM_LIMIT, MEM_LIMIT))
 
 process_queue_messages()
