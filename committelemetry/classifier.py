@@ -205,6 +205,16 @@ def has_wpt_uplift_markers(commit_author: str, summary: str) -> bool:
     )
 
 
+def has_ignore_this_changeset_marker(summary: str) -> bool:
+    """Does this changeset summary say the changeset should be entirely ignored?
+
+    Case in point for this marker is a BIG automated change to the entire source tree.
+    See https://hg.mozilla.org/mozilla-central/json-rev/6f3709b3878117466168c40affa7bca0b60cf75b
+    for an example.
+    """
+    return "# ignore-this-changeset" in summary
+
+
 def split_summary(s: str) -> str:
     """Split a commit message summary from the long-form description.
 
@@ -236,6 +246,11 @@ def determine_review_system(revision_json):
     if has_backout_markers(summary):
         log.info(f'changeset {changeset}: changeset is a back-out commit')
         return ReviewSystem.review_unneeded
+    elif has_ignore_this_changeset_marker(summary):
+        log.info(
+            f'changeset {changeset}: changeset summary has "ignore-this-changeset" flag'
+        )
+        return ReviewSystem.not_applicable
     elif has_merge_markers(revision_json):
         log.info(f'changeset {changeset}: is a merge commit')
         return ReviewSystem.not_applicable

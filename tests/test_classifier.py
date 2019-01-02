@@ -193,6 +193,16 @@ def test_has_uplift_markers(test_input, expected):
     assert has_uplift_markers(test_input) == expected
 
 
+def test_has_ignore_this_change_marker():
+    from committelemetry.classifier import has_ignore_this_changeset_marker
+
+    summary = """\
+Reformat the entire source tree
+# ignore-this-changeset
+"""
+    assert has_ignore_this_changeset_marker(summary)
+
+
 def test_obsolete_attachments_are_filtered_out():
     from committelemetry.classifier import collect_review_attachments
 
