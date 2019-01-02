@@ -11,7 +11,7 @@ from typing import Dict
 import requests
 
 from committelemetry import config, patch
-from committelemetry.classifier import determine_review_system, has_merge_markers
+from committelemetry.classifier import ReviewSystem, determine_review_system
 from committelemetry.hgmo import (
     fetch_changeset,
     fetch_raw_diff_for_changeset,
@@ -54,13 +54,13 @@ def payload_for_changeset(changesetid: str, repo_url: str) -> Dict:
     landingsystem = changeset.get('landingsystem')
     utc_pushdate = utc_hgwebdate(changeset['pushdate'])
 
-    # Only compute diffstats for non-merge commits.
-    if has_merge_markers(changeset):
-        diffstat = None
-    else:
+    # Only compute diffstats for review systems we host.
+    if reviewsystem in (ReviewSystem.phabricator, ReviewSystem.bmo):
         log.debug(f'changeset {changeset}: calculating diffstat')
         patch_text = fetch_raw_diff_for_changeset(changesetid, repo_url)
         diffstat = diffstat_for_changeset(patch_text)
+    else:
+        diffstat = None
 
     return {
         'changesetID': changesetid,
