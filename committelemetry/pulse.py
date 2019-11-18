@@ -88,9 +88,11 @@ def process_push_message(body, message, no_send=False):
             log.info(f'ping data (not sent): {ping}')
             continue
 
-        # Pings need a unique ID so they can be de-duplicated by the ingestion
-        # service.  We can use the changeset ID for the unique key.
-        send_ping(changeset, ping)
+        # Pings need a UUID so they can be de-duplicated by the ingestion
+        # service.  We construct a UUID here from the first 32 characters
+        # of the changeset hash.
+        ping_id = str(uuid.UUID(changeset[:32]))
+        send_ping(ping_id, ping)
 
     ack()
 
