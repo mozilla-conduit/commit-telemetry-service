@@ -43,7 +43,7 @@ def test_process_push_message():
     with patch('committelemetry.pulse.send_ping') as send_ping, \
          patch('committelemetry.pulse.payload_for_changeset'), \
          patch('committelemetry.pulse.changesets_for_pushid') as changesets_for_pushid:
-        changesets_for_pushid.return_value = ['ab1cd2']
+        changesets_for_pushid.return_value = ['1234567812345678123456781234567812345678']
 
         process_push_message(test_message, MagicMock())
 
