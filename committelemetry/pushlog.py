@@ -7,6 +7,7 @@ Functions related to processing mercurial pushlog messsages.
 See https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/pushlog.html#writing-agents-that-consume-pushlog-data
 """
 import logging
+import uuid
 
 from committelemetry.http import requests_retry_session
 from committelemetry.telemetry import payload_for_changeset, send_ping
