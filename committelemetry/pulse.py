@@ -8,6 +8,7 @@ See https://wiki.mozilla.org/Auto-tools/Projects/Pulse
 """
 import logging
 import socket
+import uuid
 from contextlib import closing
 from functools import partial
 
